@@ -1,9 +1,9 @@
 package com.printing_shop.Service;
 
 import com.printing_shop.dtoRequest.*;
-import com.printing_shop.dtoRespose.AuthResponse;
+import com.printing_shop.dtoRespose.*;
 
 public interface UserService {
-    String register(RegisterRequest request);
-    AuthResponse login(LoginRequest request);
+    RegisterResponse register(RegisterRequest request);
+    LoginResponse login(LoginRequest request);
 }
