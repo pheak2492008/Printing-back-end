@@ -9,6 +9,7 @@ import com.printing_shop.dtoRespose.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -75,5 +76,17 @@ public class UserServiceImpl implements UserService {
                 .refreshToken(refreshToken)
                 .user(user)
                 .build();
+    }
+    
+    @Override
+    public void logout() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        userRepository.findByEmail(email).ifPresent(user -> {
+            userRepository.delete(user);
+            System.out.println("User " + email + " has been permanently removed from the database.");
+        });
+
+        SecurityContextHolder.clearContext();
     }
 }

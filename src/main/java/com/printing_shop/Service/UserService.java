@@ -6,4 +6,5 @@ import com.printing_shop.dtoRespose.*;
 public interface UserService {
     RegisterResponse register(RegisterRequest request);
     LoginResponse login(LoginRequest request);
+    void logout();
 }
