@@ -1,5 +1,9 @@
 package com.printing_shop.Config;
 
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -24,17 +28,11 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/auth/**", 
-                    "/swagger-ui/**", 
-                    "/v3/api-docs/**", 
-                    "/swagger-ui.html"
-                ).permitAll()
+                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN") // Matches your DB 'ADMIN'
                 .anyRequest().authenticated()
             )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -42,11 +40,21 @@ public class SecurityConfig {
     }
 
     @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
+                .components(new Components()
+                        .addSecuritySchemes("BearerAuth", new SecurityScheme()
+                                .name("BearerAuth")
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")));
+    }
+
+    @Bean
     public CommandLineRunner printSwaggerLink() {
         return args -> {
-            System.out.println("\n\n" + "=".repeat(60));
-            System.out.println("👉 SWAGGER UI: http://localhost:8081/swagger-ui/index.html");
-            System.out.println("=".repeat(60) + "\n\n");
+            System.out.println("\n👉 SWAGGER UI: http://localhost:8081/swagger-ui/index.html\n");
         };
     }
 }
