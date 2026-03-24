@@ -16,12 +16,12 @@ public class MaterialController {
 
     private final MaterialRepository materialRepository;
 
-    @GetMapping
+    @GetMapping("/getall") // Fixed: Added quotes and removed space
     public ResponseEntity<List<Material>> getAllMaterials() {
         return ResponseEntity.ok(materialRepository.findAll());
     }
 
-    @PostMapping
+    @PostMapping("/create") // Fixed: Added quotes
     public ResponseEntity<Material> createMaterial(@RequestBody Material material) {
         return ResponseEntity.status(201).body(materialRepository.save(material));
     }
