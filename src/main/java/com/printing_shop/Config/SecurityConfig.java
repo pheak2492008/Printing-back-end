@@ -27,9 +27,17 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configure(http)) // Add this to support your @CrossOrigin("*")
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/admin/**").hasAuthority("ADMIN") // Matches your DB 'ADMIN'
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/materials/**").permitAll()
+                // Allow calculate without login if you want to test easily
+                .requestMatchers("/api/orders/calculate").permitAll() 
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/uploads/**").permitAll() 
+                
+                .requestMatchers("/api/orders/**").authenticated() 
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN") 
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
