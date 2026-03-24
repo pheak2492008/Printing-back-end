@@ -24,11 +24,11 @@ public class Order {
     private Boolean hasHems;
     private String designFileUrl; 
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", nullable = false) // Fixes the null mapping
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "material_id", nullable = false) // Fixes the null mapping
+    @ManyToOne
+    @JoinColumn(name = "material_id", nullable = false)
     private Material material;
 }

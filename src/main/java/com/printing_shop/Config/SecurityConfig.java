@@ -34,8 +34,7 @@ public class SecurityConfig {
                 // Allow calculate without login if you want to test easily
                 .requestMatchers("/api/orders/calculate").permitAll() 
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/uploads/**").permitAll() 
-                
+                .requestMatchers("/uploads/**").permitAll() // Add this line!                
                 .requestMatchers("/api/orders/**").authenticated() 
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN") 
                 .anyRequest().authenticated()

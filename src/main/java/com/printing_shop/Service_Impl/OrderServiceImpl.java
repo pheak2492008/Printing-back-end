@@ -8,6 +8,7 @@ import com.printing_shop.dtoRespose.OrderResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -22,57 +23,60 @@ public class OrderServiceImpl implements OrderService {
     private final MaterialRepository materialRepository;
     private final UserRepository userRepository;
 
-    // Use a path that works across different systems
     private final String UPLOAD_DIR = "src/main/resources/static/uploads/";
 
     @Override
     public Double calculatePrice(OrderRequest request) {
         Material m = materialRepository.findById(request.getMaterialId())
                 .orElseThrow(() -> new RuntimeException("Material not found"));
-        Double price = request.getWidth() * request.getLength() * m.getPricePerSqm();
+        
+        Double area = request.getWidth() * request.getLength();
+        Double price = area * m.getPricePerSqm();
+        
+        if (Boolean.TRUE.equals(request.getHasGrommets())) price += 0.50;
+        if (Boolean.TRUE.equals(request.getHasHems())) price += 0.50;
+        
         return Math.round(price * 100.0) / 100.0;
     }
 
     @Override
+    @Transactional
     public Order createOrder(OrderRequest request, MultipartFile file) {
-        // 1. Fetch Material - CRITICAL: If table is empty, this fails here with a clear message
+        // 1. Fetch Material & User
         Material material = materialRepository.findById(request.getMaterialId())
-                .orElseThrow(() -> new RuntimeException("Material ID " + request.getMaterialId() + " not found. Please create a Material first!"));
-
-        // 2. Fetch User
+                .orElseThrow(() -> new RuntimeException("Material not found ID: " + request.getMaterialId()));
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Logged in user not found in database."));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 3. Calculation Logic
+        // 2. Calculate Price
         Double area = request.getWidth() * request.getLength();
         Double totalPrice = area * material.getPricePerSqm();
         if (Boolean.TRUE.equals(request.getHasGrommets())) totalPrice += 0.50;
         if (Boolean.TRUE.equals(request.getHasHems())) totalPrice += 0.50;
-        totalPrice = Math.round(totalPrice * 100.0) / 100.0;
 
-        // 4. File Handling
+        // 3. File Upload
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         try {
             Path path = Paths.get(UPLOAD_DIR);
             if (!Files.exists(path)) Files.createDirectories(path);
             Files.copy(file.getInputStream(), path.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new RuntimeException("File upload failed: " + e.getMessage());
+            throw new RuntimeException("File save failed: " + e.getMessage());
         }
 
-        // 5. Save Order (using currentUser and material we found)
+        // 4. Build and Save Order (Assigning all values to avoid NULL)
         Order order = Order.builder()
                 .width(request.getWidth())
                 .length(request.getLength())
-                .totalPrice(totalPrice)
-                .material(material)
-                .user(currentUser) 
                 .inkChoice(request.getInkChoice())
-                .status("PENDING")
                 .dpiQuality(request.getDpiQuality())
                 .hasGrommets(request.getHasGrommets())
                 .hasHems(request.getHasHems())
+                .totalPrice(Math.round(totalPrice * 100.0) / 100.0)
+                .material(material)
+                .user(currentUser)
+                .status("PENDING")
                 .designFileUrl("/uploads/" + fileName)
                 .build();
 
@@ -81,12 +85,21 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse getOrderReceipt(Long id) {
-        Order o = orderRepository.findById(id).orElseThrow();
+        Order o = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Map everything so Swagger doesn't show null
         return OrderResponse.builder()
-                .orderId(o.getOrderId()).width(o.getWidth()).length(o.getLength())
-                .totalPrice(o.getTotalPrice()).status(o.getStatus())
+                .orderId(o.getOrderId())
+                .width(o.getWidth())
+                .length(o.getLength())
+                .totalPrice(o.getTotalPrice())
+                .status(o.getStatus())
+                .inkChoice(o.getInkChoice())
+                .dpiQuality(o.getDpiQuality())
                 .designFileUrl(o.getDesignFileUrl())
-                .material(o.getMaterial()).user(o.getUser())
+                .material(o.getMaterial())
+                .user(o.getUser())
                 .build();
     }
 
@@ -97,10 +110,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void cancelOrder(Long id) {
         Order o = orderRepository.findById(id).orElseThrow();
         if ("PENDING".equals(o.getStatus())) {
             orderRepository.delete(o);
+        } else {
+            throw new RuntimeException("Cannot delete order that is already " + o.getStatus());
         }
     }
 }
