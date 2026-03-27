@@ -1,4 +1,4 @@
-package com.printing_shop.dtoResponse;
+package com.printing_shop.dtoRespose;
 
 import lombok.Data;
 
