@@ -37,6 +37,7 @@ public class OrderController {
             @RequestParam("file") MultipartFile file
     ) throws IOException {
         
+        // Mapping parameters to the DTO for the Service layer
         OrderRequest request = new OrderRequest();
         request.setWidth(width);
         request.setLength(length);

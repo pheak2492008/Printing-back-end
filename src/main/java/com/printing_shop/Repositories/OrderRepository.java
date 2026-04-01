@@ -9,11 +9,11 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    // Fix for the findById/orderId issue we discussed earlier
+    // Fix for the findById/orderId issue
     Optional<Order> findByOrderId(Long orderId);
 
     /**
-     * FIX: findByUser_Email
+     * Find orders by the email of the user who made them
      * This tells JPA: "Look at the 'user' field in Order, 
      * then find the 'email' field inside that User."
      */

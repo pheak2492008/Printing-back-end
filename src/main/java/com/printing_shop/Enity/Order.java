@@ -10,11 +10,12 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id") // Maps the field to the DB column
     private Long orderId; 
-    
+
     private Double width;
     private Double length;
     private Double totalPrice;
