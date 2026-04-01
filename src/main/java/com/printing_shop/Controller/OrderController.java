@@ -37,7 +37,6 @@ public class OrderController {
             @RequestParam("file") MultipartFile file
     ) throws IOException {
         
-        // Mapping parameters to the DTO for the Service layer
         OrderRequest request = new OrderRequest();
         request.setWidth(width);
         request.setLength(length);
@@ -48,11 +47,14 @@ public class OrderController {
         request.setHasHems(hasHems);
 
         Order savedOrder = orderService.createOrder(request, file);
+        
+        // Use savedOrder.getOrderId() which is now a Long
         return ResponseEntity.ok(orderService.getOrderReceipt(savedOrder.getOrderId()));
     }
     
     @GetMapping("/getall")
     public ResponseEntity<List<Order>> history() {
+        // This calls the service which uses findByUser_Email
         return ResponseEntity.ok(orderService.getMyHistory());
     }
 

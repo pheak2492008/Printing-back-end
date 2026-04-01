@@ -12,7 +12,8 @@ import lombok.*;
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long orderId;
+    @Column(name = "order_id") // Maps the field to the DB column
+    private Long orderId; 
     
     private Double width;
     private Double length;

@@ -45,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
         // 1. Fetch Material & User
         Material material = materialRepository.findById(request.getMaterialId())
                 .orElseThrow(() -> new RuntimeException("Material not found ID: " + request.getMaterialId()));
+        
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -65,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("File save failed: " + e.getMessage());
         }
 
-        // 4. Build and Save Order (Assigning all values to avoid NULL)
+        // 4. Build and Save Order
         Order order = Order.builder()
                 .width(request.getWidth())
                 .length(request.getLength())
@@ -85,10 +86,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse getOrderReceipt(Long id) {
-        Order o = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+        // Use findByOrderId because your field name is orderId
+        Order o = orderRepository.findByOrderId(id)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + id));
 
-        // Map everything so Swagger doesn't show null
         return OrderResponse.builder()
                 .orderId(o.getOrderId())
                 .width(o.getWidth())
@@ -106,13 +107,17 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> getMyHistory() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return orderRepository.findByUserEmail(email);
+        // FIX: Changed findByUserEmail to findByUser_Email
+        return orderRepository.findByUser_Email(email);
     }
 
     @Override
     @Transactional
     public void cancelOrder(Long id) {
-        Order o = orderRepository.findById(id).orElseThrow();
+        // Use findByOrderId
+        Order o = orderRepository.findByOrderId(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        
         if ("PENDING".equals(o.getStatus())) {
             orderRepository.delete(o);
         } else {
