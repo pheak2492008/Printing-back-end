@@ -9,7 +9,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -33,33 +32,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for REST APIs
-            .cors(Customizer.withDefaults())
-            // Allow Swagger and H2 consoles to load in frames
-            .headers(headers -> headers.frameOptions(frame -> frame.disable())) 
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authorizeHttpRequests(auth -> auth
-                // --- 1. Public Auth & Documentation ---
+
+                // 🔓 Public Auth & Swagger
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                
-                // --- 2. Public Product Endpoints (Fixes 403) ---
+
+                // 🔐 Products (ADMIN only)
                 .requestMatchers("/api/products/**", "/api/v1/products/**")
-                .hasAuthority("ADMIN")              
-                .requestMatchers("/api/product-details/**", "/api/v1/product-details/**").permitAll()
-                
-                // --- 3. Materials & Inventory ---
+                    .hasAuthority("ADMIN")
+
+                // 🔓 Product Details (Public)
+                .requestMatchers("/api/product-details/**", "/api/v1/product-details/**")
+                    .permitAll()
+
+                // 🔓 Materials & Inventory
                 .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
                 .requestMatchers("/api/inventory/**", "/api/v1/inventory/**").permitAll()
-                
-                // --- 4. Miscellaneous Public Paths ---
-                .requestMatchers("/api/orders/calculate").permitAll() 
-                .requestMatchers("/uploads/**").permitAll()                
-                
-                // --- 5. Secured Paths ---
-                .requestMatchers("/api/orders/**").authenticated() 
-                .requestMatchers("/api/admin/**").hasAuthority("ADMIN") 
-                
-                // Catch-all: Anything not listed above requires a valid JWT
+
+                // 🔓 Misc
+                .requestMatchers("/api/orders/calculate").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
+
+                // 🔐 Secured
+                .requestMatchers("/api/orders/**").authenticated()
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+
+                // 🔐 Everything else
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -69,39 +71,55 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // ✅ CORS CONFIG
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // List specific origins for better security and browser compatibility
+
         configuration.setAllowedOrigins(List.of(
-            "http://localhost:3000", 
-            "http://localhost:5173", 
+            "http://localhost:3000",
+            "http://localhost:5173",
             "http://localhost:8081"
         ));
-        
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
+
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
+
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization",
+            "Content-Type",
+            "X-Requested-With",
+            "Accept",
+            "Origin"
+        ));
+
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 
+    // ✅ Swagger JWT config
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
-                .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
-                .components(new Components()
-                        .addSecuritySchemes("BearerAuth", new SecurityScheme()
-                                .name("BearerAuth")
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")));
+            .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
+            .components(new Components()
+                .addSecuritySchemes("BearerAuth",
+                    new SecurityScheme()
+                        .name("BearerAuth")
+                        .type(SecurityScheme.Type.HTTP)
+                        .scheme("bearer")
+                        .bearerFormat("JWT")
+                )
+            );
     }
 
+    // ✅ Print Swagger URL on start
     @Bean
     public CommandLineRunner printSwaggerLink() {
         return args -> {

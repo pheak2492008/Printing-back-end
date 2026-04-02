@@ -42,7 +42,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public Order createOrder(OrderRequest request, MultipartFile file) {
-        // 1. Fetch Material & User
         Material material = materialRepository.findById(request.getMaterialId())
                 .orElseThrow(() -> new RuntimeException("Material not found ID: " + request.getMaterialId()));
         
@@ -50,13 +49,11 @@ public class OrderServiceImpl implements OrderService {
         User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 2. Calculate Price
         Double area = request.getWidth() * request.getLength();
         Double totalPrice = area * material.getPricePerM2();
         if (Boolean.TRUE.equals(request.getHasGrommets())) totalPrice += 0.50;
         if (Boolean.TRUE.equals(request.getHasHems())) totalPrice += 0.50;
 
-        // 3. File Upload
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         try {
             Path path = Paths.get(UPLOAD_DIR);
@@ -66,7 +63,6 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("File save failed: " + e.getMessage());
         }
 
-        // 4. Build and Save Order
         Order order = Order.builder()
                 .width(request.getWidth())
                 .length(request.getLength())
@@ -86,7 +82,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse getOrderReceipt(Long id) {
-        // Use findByOrderId because your field name is orderId
         Order o = orderRepository.findByOrderId(id)
                 .orElseThrow(() -> new RuntimeException("Order not found with ID: " + id));
 
@@ -107,14 +102,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> getMyHistory() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        // FIX: Changed findByUserEmail to findByUser_Email
         return orderRepository.findByUser_Email(email);
     }
 
     @Override
     @Transactional
     public void cancelOrder(Long id) {
-        // Use findByOrderId
         Order o = orderRepository.findByOrderId(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         

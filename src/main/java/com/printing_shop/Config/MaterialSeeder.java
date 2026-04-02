@@ -1,6 +1,7 @@
 package com.printing_shop.Config;
 
-import com.printing_shop.Enity.Material;import com.printing_shop.Repositories.MaterialRepository;
+import com.printing_shop.Enity.Material;
+import com.printing_shop.Repositories.MaterialRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
