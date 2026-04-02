@@ -33,26 +33,33 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) // Disable CSRF for REST APIs
             .cors(Customizer.withDefaults())
-            // Added to allow Swagger/Iframes to load correctly
+            // Allow Swagger and H2 consoles to load in frames
             .headers(headers -> headers.frameOptions(frame -> frame.disable())) 
             .authorizeHttpRequests(auth -> auth
-                // Auth & Swagger
+                // --- 1. Public Auth & Documentation ---
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 
-                // Materials & Inventory (Added v1 to match your controllers)
+                // --- 2. Public Product Endpoints (Fixes 403) ---
+                .requestMatchers("/api/products/**", "/api/v1/products/**")
+                .hasAuthority("ADMIN")              
+                .requestMatchers("/api/product-details/**", "/api/v1/product-details/**").permitAll()
+                
+                // --- 3. Materials & Inventory ---
                 .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
                 .requestMatchers("/api/inventory/**", "/api/v1/inventory/**").permitAll()
                 
-                // Other public paths
+                // --- 4. Miscellaneous Public Paths ---
                 .requestMatchers("/api/orders/calculate").permitAll() 
                 .requestMatchers("/uploads/**").permitAll()                
                 
-                // Secured paths
+                // --- 5. Secured Paths ---
                 .requestMatchers("/api/orders/**").authenticated() 
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN") 
+                
+                // Catch-all: Anything not listed above requires a valid JWT
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -65,8 +72,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Updated to allow "*" for testing, but kept your specific localhosts
-        configuration.setAllowedOriginPatterns(List.of("*")); 
+        
+        // List specific origins for better security and browser compatibility
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:3000", 
+            "http://localhost:5173", 
+            "http://localhost:8081"
+        ));
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
         configuration.setExposedHeaders(List.of("Authorization"));
@@ -92,7 +105,8 @@ public class SecurityConfig {
     @Bean
     public CommandLineRunner printSwaggerLink() {
         return args -> {
-            System.out.println("\n👉 SWAGGER UI: http://localhost:8081/swagger-ui/index.html\n");
+            System.out.println("\n🚀 Application Started Successfully!");
+            System.out.println("👉 SWAGGER UI: http://localhost:8081/swagger-ui/index.html\n");
         };
     }
 }

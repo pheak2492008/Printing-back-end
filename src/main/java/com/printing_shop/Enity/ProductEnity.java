@@ -21,5 +21,9 @@ package com.printing_shop.Enity;
 	    private String tagColor;
 	    private String bgColor;
 	    private String iconBg;
+		public Integer getProductId() {
+			// TODO Auto-generated method stub
+			return null;
+		}
 
 }
