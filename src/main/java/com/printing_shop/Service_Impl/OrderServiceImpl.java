@@ -6,7 +6,6 @@ import com.printing_shop.Service.OrderService;
 import com.printing_shop.dtoRequest.OrderRequest;
 import com.printing_shop.dtoRespose.OrderResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,7 +20,6 @@ import java.util.UUID;
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final MaterialRepository materialRepository;
-    private final UserRepository userRepository;
 
     private final String UPLOAD_DIR = "src/main/resources/static/uploads/";
 
@@ -30,6 +28,7 @@ public class OrderServiceImpl implements OrderService {
         Material m = materialRepository.findById(request.getMaterialId())
                 .orElseThrow(() -> new RuntimeException("Material not found"));
         
+        // Math: Area * Price + Add-ons
         Double area = request.getWidth() * request.getLength();
         Double price = area * m.getPricePerM2();
         
@@ -43,17 +42,11 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public Order createOrder(OrderRequest request, MultipartFile file) {
         Material material = materialRepository.findById(request.getMaterialId())
-                .orElseThrow(() -> new RuntimeException("Material not found ID: " + request.getMaterialId()));
-        
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Material ID not found: " + request.getMaterialId()));
 
-        Double area = request.getWidth() * request.getLength();
-        Double totalPrice = area * material.getPricePerM2();
-        if (Boolean.TRUE.equals(request.getHasGrommets())) totalPrice += 0.50;
-        if (Boolean.TRUE.equals(request.getHasHems())) totalPrice += 0.50;
+        Double totalPrice = calculatePrice(request);
 
+        // Save File to local folder
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         try {
             Path path = Paths.get(UPLOAD_DIR);
@@ -63,16 +56,18 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("File save failed: " + e.getMessage());
         }
 
+        // Build and Save the Entity
         Order order = Order.builder()
+                .customerName(request.getFullName())
+                .phoneNumber(request.getPhoneNumber())
                 .width(request.getWidth())
                 .length(request.getLength())
                 .inkChoice(request.getInkChoice())
                 .dpiQuality(request.getDpiQuality())
                 .hasGrommets(request.getHasGrommets())
                 .hasHems(request.getHasHems())
-                .totalPrice(Math.round(totalPrice * 100.0) / 100.0)
+                .totalPrice(totalPrice)
                 .material(material)
-                .user(currentUser)
                 .status("PENDING")
                 .designFileUrl("/uploads/" + fileName)
                 .build();
@@ -82,11 +77,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse getOrderReceipt(Long id) {
-        Order o = orderRepository.findByOrderId(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + id));
+        Order o = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
         return OrderResponse.builder()
                 .orderId(o.getOrderId())
+                .customerName(o.getCustomerName())
+                .phoneNumber(o.getPhoneNumber())
                 .width(o.getWidth())
                 .length(o.getLength())
                 .totalPrice(o.getTotalPrice())
@@ -95,26 +92,22 @@ public class OrderServiceImpl implements OrderService {
                 .dpiQuality(o.getDpiQuality())
                 .designFileUrl(o.getDesignFileUrl())
                 .material(o.getMaterial())
-                .user(o.getUser())
                 .build();
     }
 
     @Override
-    public List<Order> getMyHistory() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return orderRepository.findByUser_Email(email);
+    public List<Order> getHistoryByPhone(String phone) {
+        return orderRepository.findByPhoneNumber(phone);
     }
 
     @Override
     @Transactional
     public void cancelOrder(Long id) {
-        Order o = orderRepository.findByOrderId(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-        
+        Order o = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
         if ("PENDING".equals(o.getStatus())) {
             orderRepository.delete(o);
         } else {
-            throw new RuntimeException("Cannot delete order that is already " + o.getStatus());
+            throw new RuntimeException("Cannot cancel order that is already in " + o.getStatus() + " state.");
         }
     }
 }

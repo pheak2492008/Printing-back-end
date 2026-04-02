@@ -37,33 +37,32 @@ public class SecurityConfig {
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authorizeHttpRequests(auth -> auth
 
-                // 🔓 Public Auth & Swagger
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+            	    // 🔓 1. AUTH & SWAGGER (Always Public)
+            	    .requestMatchers("/api/auth/**").permitAll()
+            	    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
-                // 🔐 Products (ADMIN only)
-                .requestMatchers("/api/products/**", "/api/v1/products/**")
-                    .hasAuthority("ADMIN")
+            	    // 🔓 2. THE ORDERING FLOW (Make this Public!)
+            	    // This allows Guests to Calculate and Create Orders without logging in.
+            	    .requestMatchers("/api/orders/calculate").permitAll()
+            	    .requestMatchers("/api/orders/create").permitAll()
+            	    .requestMatchers("/api/orders/history/**").permitAll() // Tracking by phone
+            	    .requestMatchers("/api/orders/{id}").permitAll()      // Viewing receipt
+            	    .requestMatchers("/uploads/**").permitAll()           // Viewing design files
 
-                // 🔓 Product Details (Public)
-                .requestMatchers("/api/product-details/**", "/api/v1/product-details/**")
-                    .permitAll()
+            	    // 🔓 3. PRODUCT & MATERIAL INFO (Public)
+            	    .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
+            	    .requestMatchers("/api/product-details/**").permitAll()
+            	    .requestMatchers("/api/inventory/**").permitAll()
 
-                // 🔓 Materials & Inventory
-                .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
-                .requestMatchers("/api/inventory/**", "/api/v1/inventory/**").permitAll()
+            	    // 🔐 4. ADMIN ONLY (Requires Login + ADMIN Role)
+            	    // Secure the management parts so only you/staff can change things.
+            	    .requestMatchers("/api/products/**").hasAuthority("ADMIN")
+            	    .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+            	    .requestMatchers("/api/orders/getall").hasAuthority("ADMIN") // Staff see all orders
 
-                // 🔓 Misc
-                .requestMatchers("/api/orders/calculate").permitAll()
-                .requestMatchers("/uploads/**").permitAll()
-
-                // 🔐 Secured
-                .requestMatchers("/api/orders/**").authenticated()
-                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-
-                // 🔐 Everything else
-                .anyRequest().authenticated()
-            )
+            	    // 🔐 5. DEFAULT
+            	    .anyRequest().authenticated()
+            	)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

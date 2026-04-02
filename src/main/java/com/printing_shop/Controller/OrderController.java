@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -27,6 +28,8 @@ public class OrderController {
 
     @PostMapping(value = "/create", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<OrderResponse> createOrder(
+            @RequestParam("fullName") String fullName,
+            @RequestParam("phoneNumber") String phoneNumber,
             @RequestParam("width") Double width,
             @RequestParam("length") Double length,
             @RequestParam("materialId") Long materialId,
@@ -37,31 +40,14 @@ public class OrderController {
             @RequestParam("file") MultipartFile file
     ) throws IOException {
         
-        // Mapping parameters to the DTO for the Service layer
-        OrderRequest request = new OrderRequest();
-        request.setWidth(width);
-        request.setLength(length);
-        request.setMaterialId(materialId);
-        request.setInkChoice(inkChoice);
-        request.setDpiQuality(dpiQuality);
-        request.setHasGrommets(hasGrommets);
-        request.setHasHems(hasHems);
-
+        OrderRequest request = new OrderRequest(fullName, phoneNumber, width, length, materialId, inkChoice, dpiQuality, hasGrommets, hasHems);
         Order savedOrder = orderService.createOrder(request, file);
-        
-        // Use savedOrder.getOrderId() which is now a Long
         return ResponseEntity.ok(orderService.getOrderReceipt(savedOrder.getOrderId()));
     }
-    
-    @GetMapping("/getall")
-    public ResponseEntity<List<Order>> history() {
-        // This calls the service which uses findByUser_Email
-        return ResponseEntity.ok(orderService.getMyHistory());
-    }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<OrderResponse> receipt(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getOrderReceipt(id));
+    @GetMapping("/history/{phone}")
+    public ResponseEntity<List<Order>> getHistory(@PathVariable String phone) {
+        return ResponseEntity.ok(orderService.getHistoryByPhone(phone));
     }
 
     @DeleteMapping("/{id}")

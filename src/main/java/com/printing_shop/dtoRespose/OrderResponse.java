@@ -1,7 +1,6 @@
 package com.printing_shop.dtoRespose;
 
 import com.printing_shop.Enity.Material;
-import com.printing_shop.Enity.User;
 import lombok.*;
 
 @Data
@@ -10,6 +9,8 @@ import lombok.*;
 @AllArgsConstructor
 public class OrderResponse {
     private Long orderId;
+    private String customerName; // New
+    private String phoneNumber;  // New
     private Double width;
     private Double length;
     private Double totalPrice;
@@ -19,5 +20,5 @@ public class OrderResponse {
     private String designFileUrl;
     
     private Material material; 
-    private User user;
+    // Removed: private User user;
 }
