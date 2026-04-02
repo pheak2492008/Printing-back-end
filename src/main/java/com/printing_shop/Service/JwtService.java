@@ -1,21 +1,19 @@
 package com.printing_shop.Service;
 
-import com.printing_shop.Enity.User;
+import com.printing_shop.Enity.User; // Note: Ensure your folder is 'Enity' or 'Entity'
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.function.Function;
 
 @Service
 public class JwtService {
 
-    // IMPORTANT: In a real app, put this in application.properties
     private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
     public String extractUsername(String token) {
@@ -28,19 +26,19 @@ public class JwtService {
     }
 
     public String generateToken(User user) {
-        return buildToken(user, 1000 * 60 * 60); // 1 Hour expiration
+        return buildToken(user, 1000 * 60 * 60); 
     }
 
     public String generateRefreshToken(User user) {
-        return buildToken(user, 1000 * 60 * 60 * 24 * 7); // 7 Days expiration
+        return buildToken(user, 1000 * 60 * 60 * 24 * 7); 
     }
 
     private String buildToken(User user, long expiration) {
         return Jwts.builder()
-                .setSubject(user.getEmail())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .subject(user.getEmail())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignInKey()) 
                 .compact();
     }
 
@@ -54,14 +52,14 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSignInKey())
+        return Jwts.parser()
+                .verifyWith(getSignInKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
-    private Key getSignInKey() {
+    private SecretKey getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
