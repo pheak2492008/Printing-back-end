@@ -1,6 +1,7 @@
 package com.printing_shop.Config;
 
 import io.swagger.v3.oas.models.Components;
+
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
@@ -17,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.printing_shop.Config.JwtAuthenticationFilter;
 
 import java.util.Arrays;
 import java.util.List;

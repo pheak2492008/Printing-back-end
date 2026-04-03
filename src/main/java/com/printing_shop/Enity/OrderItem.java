@@ -1,6 +1,7 @@
 package com.printing_shop.Enity;
 
 import jakarta.persistence.*;
+import com.printing_shop.Enity.Material;
 import lombok.*;
 
 @Entity

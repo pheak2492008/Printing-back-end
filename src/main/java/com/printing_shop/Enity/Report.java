@@ -1,6 +1,7 @@
 package com.printing_shop.Enity;   // Fixed spelling: Enity → Entity
 
 import jakarta.persistence.*;
+import com.printing_shop.Enity.Material;
 import lombok.Data;
 import java.time.LocalDateTime;
 
