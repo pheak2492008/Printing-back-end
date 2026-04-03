@@ -32,64 +32,88 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Crucial for POST requests
+            // Disable CSRF (important for APIs)
+            .csrf(csrf -> csrf.disable())
+
+            // Enable CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+            // Fix H2-console / iframe issue (optional)
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+
+            // Authorization rules
             .authorizeHttpRequests(auth -> auth
 
-                // 🔓 Public Auth & Swagger
+                // 🔓 PUBLIC: Authentication & Swagger
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                .requestMatchers(
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui.html"
+                ).permitAll()
 
-                // 🔐 Products (ADMIN only for modifications)
-                .requestMatchers("/api/products/**", "/api/v1/products/**").hasAuthority("ADMIN")
+                // 🔓 PUBLIC: Order flow (guest can use)
+                .requestMatchers("/api/orders/calculate").permitAll()
+                .requestMatchers("/api/orders/create").permitAll()
+                .requestMatchers("/api/orders/history/**").permitAll()
+                .requestMatchers("/api/orders/{id}").permitAll()
 
-                // ✅ FIX: Allow BOTH singular and plural versions for Product Details
-                .requestMatchers("/api/product-detail/**", "/api/product-details/**").permitAll()
+                // 🔓 PUBLIC: Static files
+                .requestMatchers("/uploads/**").permitAll()
 
-                // 🔓 Materials & Inventory
+                // 🔓 PUBLIC: Product info (view only)
+                .requestMatchers("/api/product-detail/**").permitAll()
+                .requestMatchers("/api/product-details/**").permitAll()
+
+                // 🔓 PUBLIC: Materials & inventory
                 .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
                 .requestMatchers("/api/inventory/**", "/api/v1/inventory/**").permitAll()
 
-                // 🔓 Misc
-                .requestMatchers("/api/orders/calculate").permitAll()
-                .requestMatchers("/uploads/**").permitAll()
-
-                // 🔐 Secured
-                .requestMatchers("/api/orders/**").authenticated()
+                // 🔐 ADMIN ONLY
+                .requestMatchers("/api/products/**", "/api/v1/products/**").hasAuthority("ADMIN")
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                .requestMatchers("/api/orders/getall").hasAuthority("ADMIN")
 
-                // 🔐 Everything else
+                // 🔐 Everything else requires login
                 .anyRequest().authenticated()
             )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+            // Stateless session (JWT)
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+
+            // Authentication provider
             .authenticationProvider(authenticationProvider)
+
+            // JWT filter
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // ✅ CORS Configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allowed Origins (Your Frontend Ports)
         configuration.setAllowedOrigins(List.of(
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://localhost:8081"
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "http://localhost:8081"
         ));
 
         configuration.setAllowedMethods(Arrays.asList(
-            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
         ));
 
         configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization",
-            "Content-Type",
-            "X-Requested-With",
-            "Accept",
-            "Origin"
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin"
         ));
 
         configuration.setExposedHeaders(List.of("Authorization"));
@@ -101,6 +125,7 @@ public class SecurityConfig {
         return source;
     }
 
+    // ✅ Swagger JWT Config
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
@@ -116,6 +141,7 @@ public class SecurityConfig {
             );
     }
 
+    // ✅ Print Swagger URL in console
     @Bean
     public CommandLineRunner printSwaggerLink() {
         return args -> {
