@@ -1,23 +1,38 @@
+
 server:
-  port: 8081  # This fixes the "Port already in use" error
+  port: 8081
 
 spring:
   application:
-    name: printing
+    name: printing-shop
 
   datasource:
-    url: jdbc:postgresql://ep-summer-pond-an2szf6l-pooler.c-6.us-east-1.aws.neon.tech:5432/neondb?sslmode=require
-    username: neondb_owner
-    password: npg_8YCOvDXybks2
+    # UPDATED with your actual Neon credentials
+    url: ${DB_URL:jdbc:postgresql://ep-summer-pond-an2szf6l-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require}
+    username: ${DB_USERNAME:neondb_owner}
+    password: ${DB_PASSWORD:npg_8YCOvDXybks2}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
 
   jpa:
     hibernate:
+      # This will automatically create your tables in Neon on startup
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
+        format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        jdbc:
-          lob:
-            non_contextual_creation: true
+        boot:
+          allow_jdbc_metadata_access: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
