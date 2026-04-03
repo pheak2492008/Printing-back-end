@@ -32,7 +32,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) // Crucial for POST requests
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authorizeHttpRequests(auth -> auth
@@ -41,13 +41,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
-                // 🔐 Products (ADMIN only)
-                .requestMatchers("/api/products/**", "/api/v1/products/**")
-                    .hasAuthority("ADMIN")
+                // 🔐 Products (ADMIN only for modifications)
+                .requestMatchers("/api/products/**", "/api/v1/products/**").hasAuthority("ADMIN")
 
-                // 🔓 Product Details (Public)
-                .requestMatchers("/api/product-details/**", "/api/v1/product-details/**")
-                    .permitAll()
+                // ✅ FIX: Allow BOTH singular and plural versions for Product Details
+                .requestMatchers("/api/product-detail/**", "/api/product-details/**").permitAll()
 
                 // 🔓 Materials & Inventory
                 .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
@@ -71,11 +69,11 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ CORS CONFIG
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
+        // Allowed Origins (Your Frontend Ports)
         configuration.setAllowedOrigins(List.of(
             "http://localhost:3000",
             "http://localhost:5173",
@@ -103,7 +101,6 @@ public class SecurityConfig {
         return source;
     }
 
-    // ✅ Swagger JWT config
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
@@ -119,7 +116,6 @@ public class SecurityConfig {
             );
     }
 
-    // ✅ Print Swagger URL on start
     @Bean
     public CommandLineRunner printSwaggerLink() {
         return args -> {

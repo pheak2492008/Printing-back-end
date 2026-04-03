@@ -7,36 +7,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/v1/product-details")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/product-detail")
+@CrossOrigin("*")
 public class ProductDetailController {
 
     @Autowired
-    private ProductDetailService productDetailService;
+    private ProductDetailService detailService;
 
-    @PostMapping("/create")
-    public ResponseEntity<ProductDetailResponse> createDetail(@RequestBody ProductDetailRequest request) {
-        return ResponseEntity.ok(productDetailService.createDetail(request));
+    // READ - For your frontend detail page
+    @PostMapping("/view")
+    public ResponseEntity<ProductDetailResponse> view(@RequestBody ProductDetailRequest req) {
+        return ResponseEntity.ok(detailService.getDetailsByProductId(req.getProductId()));
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<ProductDetailResponse> updateDetail(
-            @PathVariable Integer id,
-            @RequestBody ProductDetailRequest request) {
-        return ResponseEntity.ok(productDetailService.updateDetail(id, request));
+    // CREATE / UPDATE - For Admin
+    @PostMapping("/save")
+    public ResponseEntity<String> save(@RequestBody ProductDetailRequest req) {
+        detailService.saveOrUpdateDetail(req);
+        return ResponseEntity.ok("Detail saved successfully");
     }
 
-    @GetMapping("/product/{productId}")
-    public ResponseEntity<List<ProductDetailResponse>> getByProduct(@PathVariable Integer productId) {
-        return ResponseEntity.ok(productDetailService.getDetailsByProductId(productId));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Integer id) {
-        productDetailService.deleteDetail(id);
-        return ResponseEntity.ok("Product detail removed successfully");
+    // DELETE - For Admin
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> delete(@PathVariable Long id) {
+        detailService.deleteDetail(id);
+        return ResponseEntity.ok("Detail deleted");
     }
 }
