@@ -12,4 +12,5 @@ public interface OrderService {
     List<Order> getHistoryByPhone(String phone);
     Double calculatePrice(OrderRequest request);
     void cancelOrder(Long id);
+    List<OrderResponse> getAllOrders();
 }

@@ -44,6 +44,10 @@ public class OrderController {
         Order savedOrder = orderService.createOrder(request, file);
         return ResponseEntity.ok(orderService.getOrderReceipt(savedOrder.getOrderId()));
     }
+    @GetMapping("/getall")
+    public ResponseEntity<List<OrderResponse>> getAll() {
+        return ResponseEntity.ok(orderService.getAllOrders());
+    }
 
     @GetMapping("/history/{phone}")
     public ResponseEntity<List<Order>> getHistory(@PathVariable String phone) {

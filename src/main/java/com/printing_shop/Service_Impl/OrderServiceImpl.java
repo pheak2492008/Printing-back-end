@@ -74,6 +74,27 @@ public class OrderServiceImpl implements OrderService {
 
         return orderRepository.save(order);
     }
+    
+    @Override
+    public List<OrderResponse> getAllOrders() {
+        List<Order> orders = orderRepository.findAll();
+        
+        // Map each Order entity to an OrderResponse
+        return orders.stream().map(o -> OrderResponse.builder()
+                .orderId(o.getOrderId())
+                .customerName(o.getCustomerName())
+                .phoneNumber(o.getPhoneNumber())
+                .width(o.getWidth())
+                .length(o.getLength())
+                .totalPrice(o.getTotalPrice())
+                .status(o.getStatus())
+                .inkChoice(o.getInkChoice())
+                .dpiQuality(o.getDpiQuality())
+                .designFileUrl(o.getDesignFileUrl())
+                .material(o.getMaterial())
+                .build()
+        ).toList();
+    }
 
     @Override
     public OrderResponse getOrderReceipt(Long id) {
