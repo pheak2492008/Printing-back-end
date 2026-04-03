@@ -7,89 +7,53 @@ import com.printing_shop.Repositories.ProductRepository;
 import com.printing_shop.Service.ProductDetailService;
 import com.printing_shop.dtoRequest.ProductDetailRequest;
 import com.printing_shop.dtoRespose.ProductDetailResponse;
-import com.printing_shop.excetion.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductDetailServiceImpl implements ProductDetailService {
 
     @Autowired
-    private ProductDetailRepository productDetailRepository;
+    private ProductDetailRepository detailRepo;
 
     @Autowired
-    private ProductRepository productRepository;
+    private ProductRepository productRepo;
 
     @Override
-    @Transactional
-    public ProductDetailResponse createDetail(ProductDetailRequest request) {
-        ProductEnity product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + request.getProductId()));
+    public ProductDetailResponse getDetailsByProductId(Long productId) {
+        ProductDetail detail = detailRepo.findByProductId(productId)
+                .orElseThrow(() -> new RuntimeException("Details not found for Product: " + productId));
 
-        ProductDetail detail = ProductDetail.builder()
-                .product(product)
-                .detailName(request.getAttributeName())
-                .detailValue(request.getAttributeValue())
-                .description(request.getDescription())
-                .build();
-
-        ProductDetail savedDetail = productDetailRepository.save(detail);
-        return mapToResponse(savedDetail);
+        ProductDetailResponse res = new ProductDetailResponse();
+        res.setProductId(detail.getProduct().getId());
+        res.setProductName(detail.getProduct().getName());
+        res.setPrice(detail.getProduct().getPrice());
+        res.setDescription(detail.getDescription());
+        res.setSpecifications(detail.getSpecifications());
+        res.setMaterialList(detail.getMaterialList());
+        return res;
     }
 
     @Override
-    @Transactional
-    public ProductDetailResponse updateDetail(Integer id, ProductDetailRequest request) {
-        ProductDetail detail = productDetailRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Detail not found with ID: " + id));
+    public void saveOrUpdateDetail(ProductDetailRequest request) {
+        ProductEnity product = productRepo.findById(request.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if (request.getProductId() != null) {
-            ProductEnity product = productRepository.findById(request.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + request.getProductId()));
-            detail.setProduct(product);
-        }
+        ProductDetail detail = detailRepo.findByProductId(request.getProductId())
+                .orElse(new ProductDetail());
 
-        if (request.getAttributeName() != null) detail.setDetailName(request.getAttributeName());
-        if (request.getAttributeValue() != null) detail.setDetailValue(request.getAttributeValue());
-        if (request.getDescription() != null) detail.setDescription(request.getDescription());
-
-        ProductDetail updated = productDetailRepository.save(detail);
-        return mapToResponse(updated);
+        detail.setProduct(product);
+        detail.setDescription(request.getDescription());
+        detail.setSpecifications(request.getSpecifications());
+        detail.setMaterialList(request.getMaterialList());
+        
+        detailRepo.save(detail);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<ProductDetailResponse> getDetailsByProductId(Integer productId) {
-        if (!productRepository.existsById(productId)) {
-            throw new ResourceNotFoundException("Product " + productId + " does not exist.");
-        }
-
-        return productDetailRepository.findByProduct_Id(productId)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public void deleteDetail(Integer id) {
-        if (!productDetailRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Detail ID " + id + " not found.");
-        }
-        productDetailRepository.deleteById(id);
-    }
-
-    private ProductDetailResponse mapToResponse(ProductDetail detail) {
-        ProductDetailResponse response = new ProductDetailResponse();
-        response.setProductDetailId(detail.getProductDetailId());
-        response.setProductId(detail.getProduct().getProductId());
-        response.setAttributeName(detail.getDetailName());
-        response.setAttributeValue(detail.getDetailValue());
-        response.setDescription(detail.getDescription());
-        return response;
+    public void deleteDetail(Long productId) {
+        ProductDetail detail = detailRepo.findByProductId(productId)
+                .orElseThrow(() -> new RuntimeException("Detail not found"));
+        detailRepo.delete(detail);
     }
 }
