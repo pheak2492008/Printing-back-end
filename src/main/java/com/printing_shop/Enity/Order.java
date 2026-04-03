@@ -22,12 +22,15 @@ public class Order {
     private Double width;
     private Double length;
     private Double totalPrice;
-    private String status; // PENDING, PRINTING, COMPLETED
+    private String status; 
     private String dpiQuality;
     private String inkChoice;
     private Boolean hasGrommets;
     private Boolean hasHems;
     private String designFileUrl; 
+    
+    @Column(length = 1000) 
+    private String description;
 
     @ManyToOne
     @JoinColumn(name = "material_id", nullable = false)

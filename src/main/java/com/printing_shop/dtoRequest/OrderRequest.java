@@ -15,4 +15,5 @@ public class OrderRequest {
     private String dpiQuality;
     private Boolean hasGrommets;
     private Boolean hasHems;
+    private String description; // Added the real field here
 }

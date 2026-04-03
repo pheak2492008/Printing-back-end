@@ -24,39 +24,27 @@ public class OrderServiceImpl implements OrderService {
     private final String UPLOAD_DIR = "src/main/resources/static/uploads/";
 
     @Override
-    public Double calculatePrice(OrderRequest request) {
-        Material m = materialRepository.findById(request.getMaterialId())
-                .orElseThrow(() -> new RuntimeException("Material not found"));
-        
-        // Math: Area * Price + Add-ons
-        Double area = request.getWidth() * request.getLength();
-        Double price = area * m.getPricePerM2();
-        
-        if (Boolean.TRUE.equals(request.getHasGrommets())) price += 0.50;
-        if (Boolean.TRUE.equals(request.getHasHems())) price += 0.50;
-        
-        return Math.round(price * 100.0) / 100.0;
-    }
-
-    @Override
     @Transactional
     public Order createOrder(OrderRequest request, MultipartFile file) {
         Material material = materialRepository.findById(request.getMaterialId())
-                .orElseThrow(() -> new RuntimeException("Material ID not found: " + request.getMaterialId()));
+                .orElseThrow(() -> new RuntimeException("Material not found"));
 
         Double totalPrice = calculatePrice(request);
 
-        // Save File to local folder
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        try {
-            Path path = Paths.get(UPLOAD_DIR);
-            if (!Files.exists(path)) Files.createDirectories(path);
-            Files.copy(file.getInputStream(), path.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new RuntimeException("File save failed: " + e.getMessage());
+        String fileUrl = null;
+        // ✅ Make file optional to allow description-only orders
+        if (file != null && !file.isEmpty()) {
+            String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            try {
+                Path path = Paths.get(UPLOAD_DIR);
+                if (!Files.exists(path)) Files.createDirectories(path);
+                Files.copy(file.getInputStream(), path.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+                fileUrl = "/uploads/" + fileName;
+            } catch (IOException e) {
+                throw new RuntimeException("File save failed: " + e.getMessage());
+            }
         }
 
-        // Build and Save the Entity
         Order order = Order.builder()
                 .customerName(request.getFullName())
                 .phoneNumber(request.getPhoneNumber())
@@ -66,69 +54,59 @@ public class OrderServiceImpl implements OrderService {
                 .dpiQuality(request.getDpiQuality())
                 .hasGrommets(request.getHasGrommets())
                 .hasHems(request.getHasHems())
+                .description(request.getDescription()) // ✅ Save the text
                 .totalPrice(totalPrice)
                 .material(material)
                 .status("PENDING")
-                .designFileUrl("/uploads/" + fileName)
+                .designFileUrl(fileUrl)
                 .build();
 
         return orderRepository.save(order);
     }
-    
+
     @Override
     public List<OrderResponse> getAllOrders() {
-        List<Order> orders = orderRepository.findAll();
-        
-        // Map each Order entity to an OrderResponse
-        return orders.stream().map(o -> OrderResponse.builder()
-                .orderId(o.getOrderId())
-                .customerName(o.getCustomerName())
-                .phoneNumber(o.getPhoneNumber())
-                .width(o.getWidth())
-                .length(o.getLength())
-                .totalPrice(o.getTotalPrice())
-                .status(o.getStatus())
-                .inkChoice(o.getInkChoice())
-                .dpiQuality(o.getDpiQuality())
-                .designFileUrl(o.getDesignFileUrl())
-                .material(o.getMaterial())
-                .build()
-        ).toList();
+        return orderRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override
     public OrderResponse getOrderReceipt(Long id) {
-        Order o = orderRepository.findById(id)
+        Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+        return mapToResponse(order);
+    }
 
+    private OrderResponse mapToResponse(Order order) {
         return OrderResponse.builder()
-                .orderId(o.getOrderId())
-                .customerName(o.getCustomerName())
-                .phoneNumber(o.getPhoneNumber())
-                .width(o.getWidth())
-                .length(o.getLength())
-                .totalPrice(o.getTotalPrice())
-                .status(o.getStatus())
-                .inkChoice(o.getInkChoice())
-                .dpiQuality(o.getDpiQuality())
-                .designFileUrl(o.getDesignFileUrl())
-                .material(o.getMaterial())
+                .orderId(order.getOrderId())
+                .customerName(order.getCustomerName())
+                .phoneNumber(order.getPhoneNumber())
+                .width(order.getWidth())
+                .length(order.getLength())
+                .totalPrice(order.getTotalPrice())
+                .status(order.getStatus())
+                .designFileUrl(order.getDesignFileUrl())
+                .description(order.getDescription()) // ✅ Return the text
+                .material(order.getMaterial())
                 .build();
     }
 
     @Override
-    public List<Order> getHistoryByPhone(String phone) {
-        return orderRepository.findByPhoneNumber(phone);
+    public Double calculatePrice(OrderRequest request) {
+        Material m = materialRepository.findById(request.getMaterialId()).get();
+        Double area = request.getWidth() * request.getLength();
+        return Math.round((area * m.getPricePerM2()) * 100.0) / 100.0;
     }
+
+    @Override
+    public List<Order> getHistoryByPhone(String phone) { return orderRepository.findByPhoneNumber(phone); }
 
     @Override
     @Transactional
     public void cancelOrder(Long id) {
         Order o = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
-        if ("PENDING".equals(o.getStatus())) {
-            orderRepository.delete(o);
-        } else {
-            throw new RuntimeException("Cannot cancel order that is already in " + o.getStatus() + " state.");
-        }
+        if ("PENDING".equals(o.getStatus())) orderRepository.delete(o);
     }
 }

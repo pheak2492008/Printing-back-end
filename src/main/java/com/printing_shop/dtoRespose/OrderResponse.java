@@ -9,8 +9,8 @@ import lombok.*;
 @AllArgsConstructor
 public class OrderResponse {
     private Long orderId;
-    private String customerName; // New
-    private String phoneNumber;  // New
+    private String customerName;
+    private String phoneNumber;
     private Double width;
     private Double length;
     private Double totalPrice;
@@ -18,7 +18,7 @@ public class OrderResponse {
     private String inkChoice;
     private String dpiQuality;
     private String designFileUrl;
+    private String description; // ✅ ADD THIS LINE!
     
     private Material material; 
-    // Removed: private User user;
 }
