@@ -17,10 +17,9 @@ public class ProductEnity {
 
     private String title;
     private String description;
-    private String tag;
-    private String tagColor;
-    private String bgColor;
-    private String iconBg;
+    @Column(name = "image_url")
+    private String imageUrl;
+    
 
     // Matches your ERD's requirement for a specific Product ID
     private Integer productId;

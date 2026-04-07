@@ -140,6 +140,7 @@ public class SecurityConfig {
                 )
             );
     }
+    
 
     // ✅ Print Swagger URL in console
     @Bean
@@ -149,4 +150,5 @@ public class SecurityConfig {
             System.out.println("👉 SWAGGER UI: http://localhost:8081/swagger-ui/index.html\n");
         };
     }
+    
 }

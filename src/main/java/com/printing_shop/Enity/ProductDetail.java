@@ -4,23 +4,19 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Getter 
-@Setter
-@NoArgsConstructor 
-@AllArgsConstructor
+@Table(name = "products")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class ProductDetail {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
     
-    private String specifications;
-    private String materialList; // e.g., "Standard PVC, Mesh, Fabric"
-
-    @OneToOne
-    @JoinColumn(name = "product_id")
-    private ProductEnity product;
+    private String name;
+    private String description;
+    private Double price;
+    private Integer stock;
+	public void setTitle(String title) {
+		// TODO Auto-generated method stub
+		
+	}
 }

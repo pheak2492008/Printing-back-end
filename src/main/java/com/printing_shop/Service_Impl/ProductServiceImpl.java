@@ -43,10 +43,7 @@ public class ProductServiceImpl implements ProductService {
         // 2. Update the managed object
         existing.setTitle(request.getTitle());
         existing.setDescription(request.getDescription());
-        existing.setTag(request.getTag());
-        existing.setTagColor(request.getTagColor());
-        existing.setBgColor(request.getBgColor());
-        existing.setIconBg(request.getIconBg());
+        existing.setImageUrl(request.getImageUrl());
         existing.setProductId(request.getProductId());
 
         // 3. Save the already-attached object

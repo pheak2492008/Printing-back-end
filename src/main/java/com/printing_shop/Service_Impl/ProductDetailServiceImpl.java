@@ -1,59 +1,67 @@
 package com.printing_shop.Service_Impl;
 
 import com.printing_shop.Enity.ProductDetail;
-import com.printing_shop.Enity.ProductEnity;
 import com.printing_shop.Repositories.ProductDetailRepository;
-import com.printing_shop.Repositories.ProductRepository;
 import com.printing_shop.Service.ProductDetailService;
-import com.printing_shop.dtoRequest.ProductDetailRequest;
+import com.printing_shop.dtoRequest.ProductRequest;
 import com.printing_shop.dtoRespose.ProductDetailResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductDetailServiceImpl implements ProductDetailService {
 
     @Autowired
-    private ProductDetailRepository detailRepo;
-
-    @Autowired
-    private ProductRepository productRepo;
+    private ProductDetailRepository repository;
 
     @Override
-    public ProductDetailResponse getDetailsByProductId(Long productId) {
-        ProductDetail detail = detailRepo.findByProductId(productId)
-                .orElseThrow(() -> new RuntimeException("Details not found for Product: " + productId));
-
-        ProductDetailResponse res = new ProductDetailResponse();
-        res.setProductId(detail.getProduct().getId());
-        res.setProductName(detail.getProduct().getName());
-        res.setPrice(detail.getProduct().getPrice());
-        res.setDescription(detail.getDescription());
-        res.setSpecifications(detail.getSpecifications());
-        res.setMaterialList(detail.getMaterialList());
-        return res;
+    public List<ProductDetailResponse> getAll() {
+        return repository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Override
-    public void saveOrUpdateDetail(ProductDetailRequest request) {
-        ProductEnity product = productRepo.findById(request.getProductId())
+    public ProductDetailResponse getById(Long id) {
+        ProductDetail product = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + id));
+        return mapToResponse(product);
+    }
+
+    @Override
+    public ProductDetailResponse create(ProductRequest req) {
+        ProductDetail product = new ProductDetail();
+        product.setName(req.getName());
+        product.setDescription(req.getDescription());
+        product.setPrice(req.getPrice());
+        product.setStock(req.getStock());
+        return mapToResponse(repository.save(product));
+    }
+
+    @Override
+    public ProductDetailResponse update(Long id, ProductRequest req) {
+        ProductDetail product = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        ProductDetail detail = detailRepo.findByProductId(request.getProductId())
-                .orElse(new ProductDetail());
-
-        detail.setProduct(product);
-        detail.setDescription(request.getDescription());
-        detail.setSpecifications(request.getSpecifications());
-        detail.setMaterialList(request.getMaterialList());
-        
-        detailRepo.save(detail);
+        product.setName(req.getName());
+        product.setDescription(req.getDescription());
+        product.setPrice(req.getPrice());
+        product.setStock(req.getStock());
+        return mapToResponse(repository.save(product));
     }
 
     @Override
-    public void deleteDetail(Long productId) {
-        ProductDetail detail = detailRepo.findByProductId(productId)
-                .orElseThrow(() -> new RuntimeException("Detail not found"));
-        detailRepo.delete(detail);
+    public void delete(Long id) {
+        repository.deleteById(id);
+    }
+
+    private ProductDetailResponse mapToResponse(ProductDetail entity) {
+        ProductDetailResponse res = new ProductDetailResponse();
+        res.setId(entity.getId());
+        res.setName(entity.getName());
+        res.setDescription(entity.getDescription());
+        res.setPrice(entity.getPrice());
+        res.setStock(entity.getStock());
+        return res;
     }
 }

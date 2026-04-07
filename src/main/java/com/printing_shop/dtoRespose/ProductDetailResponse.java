@@ -4,10 +4,9 @@ import lombok.Data;
 
 @Data
 public class ProductDetailResponse {
-    private Long productId;
-    private String productName;
-    private Double price;
+    private Long id;
+    private String name;
     private String description;
-    private String specifications;
-    private String materialList;
+    private Double price;
+    private Integer stock;
 }
