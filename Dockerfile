@@ -1,26 +1,15 @@
-# Stage 1: Build with Maven + JDK 21 (Updated Tag)
-FROM maven:3.9.6-eclipse-temurin-21 AS build
-
+# Stage 1: Build the application using Maven and Java 21
+FROM maven:3.9.6-amazoncorretto-21 AS build
 WORKDIR /app
-
-# Copy pom.xml first
 COPY pom.xml .
-
-# Download dependencies offline (Good practice for caching!)
-RUN mvn dependency:go-offline -B
-
-# Copy source code
 COPY src ./src
-
-# Build the project
+# Build the jar file
 RUN mvn clean package -DskipTests
 
-# Stage 2: Runtime with JDK 21
-FROM eclipse-temurin:21-jdk-alpine
+# Stage 2: Run the application using Java 21 Runtime
+FROM amazoncorretto:21-alpine
 WORKDIR /app
-
-# Copy the built jar from build stage
+# Copy the jar from the build stage
 COPY --from=build /app/target/*.jar app.jar
-
-# Run the app
-ENTRYPOINT ["java","-jar","app.jar"]
+EXPOSE 8081
+ENTRYPOINT ["java", "-jar", "app.jar"]
