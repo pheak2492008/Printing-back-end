@@ -72,6 +72,7 @@ public class UserServiceImpl implements UserService {
                 .message("Login Successful")
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .userId(user.getId())
                 .user(user)
                 .build();
     }
