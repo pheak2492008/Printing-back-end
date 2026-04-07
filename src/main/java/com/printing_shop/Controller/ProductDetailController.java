@@ -1,47 +1,37 @@
 package com.printing_shop.Controller;
 
-import com.printing_shop.Service.ProductDetailService;
 import com.printing_shop.dtoRequest.ProductRequest;
 import com.printing_shop.dtoRespose.ProductDetailResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.printing_shop.Service.ProductDetailService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/products")
-@CrossOrigin(origins = "*") 
+@RequestMapping("/api/v1/product-details")
+@CrossOrigin(origins = "http://localhost:5178")
+@RequiredArgsConstructor
 public class ProductDetailController {
 
-    @Autowired
-    private ProductDetailService service;
+    private final ProductDetailService detailService;
 
-    // View All Products (Catalog View)
-    @GetMapping
-    public ResponseEntity<List<ProductDetailResponse>> getAll() {
-        return ResponseEntity.ok(service.getAll());
-    }
-
-    // View Single Product Detail (When User Clicks)
     @GetMapping("/{id}")
     public ResponseEntity<ProductDetailResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.getById(id));
+        return ResponseEntity.ok(detailService.getById(id));
     }
 
+    @GetMapping
+    public List<ProductDetailResponse> getAll() {
+        return detailService.getAll();
+    }
+
+    // Admin Only: Create or Update details
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDetailResponse> create(@RequestBody ProductRequest request) {
-        return ResponseEntity.ok(service.create(request));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ProductDetailResponse> update(@PathVariable Long id, @RequestBody ProductRequest request) {
-        return ResponseEntity.ok(service.update(id, request));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
-        service.delete(id);
-        return ResponseEntity.ok("Deleted successfully");
+        return ResponseEntity.status(201).body(detailService.create(request));
     }
 }
