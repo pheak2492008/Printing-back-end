@@ -6,8 +6,9 @@ import lombok.Data;
 @Data
 @Builder
 public class ProfileResponse {
-    private String id;
-    private String name;
-    private String email;
-    private String image;
+    private Integer userId;
+    private String fullName;
+    private String phone;
+    private String address;
+    private String avatarUrl;
 }

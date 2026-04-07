@@ -1,6 +1,7 @@
 package com.printing_shop.Config;
 
 import io.swagger.v3.oas.models.Components;
+import org.springframework.http.HttpMethod;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
@@ -69,11 +70,19 @@ public class SecurityConfig {
                 .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
                 .requestMatchers("/api/inventory/**", "/api/v1/inventory/**").permitAll()
 
-                // 🔐 ADMIN ONLY
-                .requestMatchers("/api/products/**", "/api/v1/products/**").hasAuthority("ADMIN")
+             // 🔐 ADMIN ONLY (More specific rules first)
+                // Explicitly allow OPTIONS for Preflight requests
+                .requestMatchers(HttpMethod.OPTIONS, "/api/v1/admin/profile/**").permitAll() 
+                
+                // Explicitly handle GET and PUT for the profile
+                .requestMatchers(HttpMethod.GET, "/api/v1/admin/profile/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/admin/profile/**").hasAuthority("ADMIN")
+                
+                // General Admin catch-all
+                .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                .requestMatchers("/api/products/**", "/api/v1/products/**").hasAuthority("ADMIN")
                 .requestMatchers("/api/orders/getall").hasAuthority("ADMIN")
-
                 // 🔐 Everything else requires login
                 .anyRequest().authenticated()
             )

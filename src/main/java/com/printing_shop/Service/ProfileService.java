@@ -1,16 +1,11 @@
 package com.printing_shop.Service;
 
-import com.printing_shop.Enity.ProfileEnity;
-
-import java.util.Optional;
+import com.printing_shop.dtoRequest.ProfileRequest;
+import com.printing_shop.dtoRespose.ProfileResponse;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 public interface ProfileService {
-
-    ProfileEnity createProfile(ProfileEnity profile);
-
-    Optional<ProfileEnity> getProfileByUserId(Integer userId);
-
-    ProfileEnity updateProfile(Integer userId, ProfileEnity profile);
-
-    void deleteProfile(Integer id);
+    ProfileResponse getAdminProfile(Integer userId);
+    ProfileResponse updateAdminProfile(Integer userId, ProfileRequest request, MultipartFile image) throws IOException;
 }
