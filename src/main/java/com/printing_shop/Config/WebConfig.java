@@ -1,35 +1,32 @@
 package com.printing_shop.Config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    // 1. Resource Handler for Uploads
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // This maps http://localhost:8081/uploads/image.jpg to the physical folder
+        // This helps your browser see the images at http://localhost:8081/uploads/filename.jpg
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:src/main/resources/static/uploads/")
-                .setCachePeriod(0); // Useful during development to see changes immediately
+                .addResourceLocations("file:uploads/"); // Pointing to the root uploads folder
     }
 
-    // 2. Corrected CORS Mapping
     @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Changed from /api/** to /** to cover all bases
-                .allowedOrigins(
-                    "http://localhost:5173", 
-                    "http://127.0.0.1:5173", 
-                    "http://localhost:3000" // Common fallback for React
-                ) 
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                .allowedHeaders("*") // Allows all headers (Content-Type, Authorization, etc.)
-                .exposedHeaders("Authorization") // Important if you use JWT later
-                .allowCredentials(true)
-                .maxAge(3600); // Cache the "Preflight" request for 1 hour
+    public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
+        // FIX FOR THE 500 ERROR:
+        // This allows Spring to read the "request" part as JSON even if Swagger sends it as octet-stream
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
+        converters.add(converter);
     }
 }
