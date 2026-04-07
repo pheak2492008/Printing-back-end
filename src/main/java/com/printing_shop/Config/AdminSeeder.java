@@ -1,6 +1,9 @@
 package com.printing_shop.Config;
+
 import com.printing_shop.Enity.User;
+import com.printing_shop.Enity.ProfileEnity;
 import com.printing_shop.Repositories.UserRepository;
+import com.printing_shop.Repositories.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -8,37 +11,35 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-
 public class AdminSeeder implements CommandLineRunner {
-	private final UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
-        // 1. Define Admin details
-        String adminEmail = "admin@printshop.com";
+        String email = "admin@printshop.com";
+        if (userRepository.findByEmail(email).isEmpty()) {
+            // 1. Create User
+            User user = User.builder()
+                    .fullName("System Admin")
+                    .email(email)
+                    .password(passwordEncoder.encode("admin123"))
+                    .role("ADMIN")
+                    .build();
+            User savedUser = userRepository.save(user);
 
-        // 2. Check if Admin already exists to avoid duplicates
-        if (userRepository.findByEmail(adminEmail).isEmpty()) {
-            
-            User admin = User.builder()
-                    .fullName("System Administrator")
-                    .email(adminEmail)
-                    .phone("012345678")
-                    .password(passwordEncoder.encode("admin123")) // Default password
-                    .role("ADMIN") // Role for Dashboard access
+            // 2. Create Profile (Crucial step!)
+            ProfileEnity adminProfile = ProfileEnity.builder()
+                    .userId(savedUser.getId()) // Ensure this is Long or cast to Integer
+                    .fullName(savedUser.getFullName())
+                    .phone(savedUser.getPhone())
+                    .address("Phnom Penh, Cambodia")
+                    .avatar("/uploads/default-admin.png")
                     .build();
 
-            userRepository.save(admin);
-            
-            System.out.println("\n" + "=".repeat(40));
-            System.out.println("🚀 ADMIN ACCOUNT SEEDED SUCCESSFULLY");
-            System.out.println("📧 Email: " + adminEmail);
-            System.out.println("🔑 Password: admin123");
-            System.out.println("=".repeat(40) + "\n");
-        } else {
-            System.out.println("ℹ️ Admin account already exists. Skipping seed...");
+            profileRepository.save(adminProfile);
+            System.out.println("🚀 Admin and Profile seeded for ID: " + savedUser.getId());
         }
     }
-
 }
