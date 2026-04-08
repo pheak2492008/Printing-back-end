@@ -4,37 +4,36 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "123123"
-      POSTGRES_DB: prinshop_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5433:5432"  # Using 5433 to avoid your local Postgres conflict
+      - "${DB_LOCAL_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - printshop-network
 
   printing-backend:
     build: .
     container_name: printing_backend_container
     ports:
-      - "8081:8081" # Keep this as is since your Spring app wants 8081
+      - "8081:8081"
     environment:
-      # Note: Port 5432 is used here because inside the Docker network, 
-      # the DB is still listening on its default 5432.
-      DATABASE_URL: postgres://postgres:123123@db:5432/prinshop_db
+      # This URL is for when the app runs INSIDE the container
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     depends_on:
       - db
+    networks:
+      - printshop-network
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin_container
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@printshop.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-    ports:
-      - "8888:80"  # Moved to 8888 to stay out of the way of your App
-    depends_on:
-      - db
 
 volumes:
   postgres_data:
+
+networks:
+  printshop-network:
+    driver: bridge

@@ -2,7 +2,7 @@ spring:
   application:
     name: printing-shop
   datasource:
-    url: jdbc:postgresql://db:5432/prinshop_db
+    url: jdbc:postgresql://localhost:5433/prinshop_db
     username: postgres
     password: "123123"
   jpa:
