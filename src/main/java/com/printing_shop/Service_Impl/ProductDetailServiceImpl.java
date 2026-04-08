@@ -10,11 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,85 +20,70 @@ import java.util.stream.Collectors;
 public class ProductDetailServiceImpl implements ProductDetailService {
 
     private final ProductDetailRepository repository;
-    private final String UPLOAD_DIR = "uploads/";
+    private final String UPLOAD_DIR = "uploads/products/";
 
     private ProductDetailResponse mapToResponse(ProductDetail entity) {
-        ProductDetailResponse response = new ProductDetailResponse();
-        response.setId(entity.getId());
-        response.setName(entity.getName());
-        response.setDescription(entity.getDescription());
-        response.setPrice(entity.getPrice());
-        response.setStock(entity.getStock());
-        response.setImageUrl(entity.getImageUrl());
-        return response;
+        return ProductDetailResponse.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .price(entity.getPrice())
+                .stock(entity.getStock())
+                .imageUrl(entity.getImageUrl())
+                .build();
     }
 
     @Override
     @Transactional
     public ProductDetailResponse saveWithImage(ProductRequest request, MultipartFile file) throws IOException {
-        File dir = new File(UPLOAD_DIR);
-        if (!dir.exists()) dir.mkdirs();
-
+        // 1. Save file to disk logic...
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = Paths.get(UPLOAD_DIR + fileName);
+        Path filePath = Paths.get("uploads/products/").resolve(fileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
+        // 2. Map DTO to Entity (Check every field!)
         ProductDetail entity = ProductDetail.builder()
-                .name(request.getName() != null ? request.getName() : request.getTitle())
+                .title(request.getTitle())
+                .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
-                .imageUrl("/uploads/" + fileName)
-                .stock(request.getStock() != null ? request.getStock() : 10)
+                .productId(request.getProductId())
+                .stock(request.getStock())
+                .imageUrl("/uploads/products/" + fileName) // The hidden field is set here
                 .build();
 
         return mapToResponse(repository.save(entity));
+    }
+    @Override
+    public List<ProductDetailResponse> getAll() {
+        return repository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Override
     public ProductDetailResponse getById(Long id) {
-        ProductDetail entity = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product Detail not found: " + id));
+        ProductDetail entity = repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
         return mapToResponse(entity);
     }
 
     @Override
-    public List<ProductDetailResponse> getAll() {
-        return repository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
+    @Transactional
+    public void delete(Long id) { repository.deleteById(id); }
 
     @Override
-    @Transactional
     public ProductDetailResponse create(ProductRequest request) {
         ProductDetail entity = ProductDetail.builder()
-                .name(request.getName() != null ? request.getName() : request.getTitle())
-                .description(request.getDescription())
-                .price(request.getPrice())
-                .imageUrl(request.getImageUrl())
-                .stock(request.getStock() != null ? request.getStock() : 0)
-                .build();
+                .name(request.getName()).description(request.getDescription())
+                .price(request.getPrice()).stock(request.getStock()).build();
         return mapToResponse(repository.save(entity));
     }
 
     @Override
-    @Transactional
     public ProductDetailResponse update(Long id, ProductRequest request) {
-        ProductDetail existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        existing.setName(request.getName() != null ? request.getName() : request.getTitle());
+        ProductDetail existing = repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
+        existing.setName(request.getName());
         existing.setDescription(request.getDescription());
         existing.setPrice(request.getPrice());
         existing.setStock(request.getStock());
-        if(request.getImageUrl() != null) existing.setImageUrl(request.getImageUrl());
-
         return mapToResponse(repository.save(existing));
-    }
-
-    @Override
-    @Transactional
-    public void delete(Long id) {
-        repository.deleteById(id);
     }
 }
