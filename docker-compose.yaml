@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "123123"
-      POSTGRES_DB: prinshop_db
+      POSTGRES_DB: printing_db
     ports:
       - "5433:5432"  # Using 5433 to avoid your local Postgres conflict
     volumes:
@@ -20,7 +20,7 @@ services:
     environment:
       # Note: Port 5432 is used here because inside the Docker network, 
       # the DB is still listening on its default 5432.
-      DATABASE_URL: postgres://postgres:123123@db:5432/prinshop_db
+      DATABASE_URL: postgres://postgres:123123@db:5432/printing_db
     depends_on:
       - db
 

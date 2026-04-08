@@ -1,10 +1,12 @@
 spring:
   application:
-    name: printing-shop
+    name: Printing
+
   datasource:
-    url: jdbc:postgresql://db:5432/prinshop_db
+    url: jdbc:postgresql://localhost:5432/printing_db
     username: postgres
     password: "123123"
+
   jpa:
     hibernate:
       ddl-auto: update

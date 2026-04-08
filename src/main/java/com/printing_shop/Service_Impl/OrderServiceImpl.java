@@ -86,10 +86,14 @@ public class OrderServiceImpl implements OrderService {
                 .phoneNumber(order.getPhoneNumber())
                 .width(order.getWidth())
                 .length(order.getLength())
+                .inkChoice(order.getInkChoice())      // This will now work
+                .dpiQuality(order.getDpiQuality())    // This will now work without errors
+                .hasGrommets(order.getHasGrommets())  // This will now work
+                .hasHems(order.getHasHems())          // This will now work
                 .totalPrice(order.getTotalPrice())
                 .status(order.getStatus())
                 .designFileUrl(order.getDesignFileUrl())
-                .description(order.getDescription()) // ✅ Return the text
+                .description(order.getDescription())
                 .material(order.getMaterial())
                 .build();
     }
