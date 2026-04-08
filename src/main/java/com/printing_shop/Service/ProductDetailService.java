@@ -1,11 +1,16 @@
 package com.printing_shop.Service;
 
-import com.printing_shop.dtoRequest.ProductDetailRequest;
+import com.printing_shop.dtoRequest.ProductRequest;
 import com.printing_shop.dtoRespose.ProductDetailResponse;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 import java.util.List;
 
 public interface ProductDetailService {
-    ProductDetailResponse getDetailsByProductId(Long productId);
-    void saveOrUpdateDetail(ProductDetailRequest request);
-    void deleteDetail(Long productId);
+    ProductDetailResponse saveWithImage(ProductRequest request, MultipartFile file) throws IOException;
+    List<ProductDetailResponse> getAll();
+    ProductDetailResponse getById(Long id);
+    void delete(Long id);
+    ProductDetailResponse create(ProductRequest request);
+    ProductDetailResponse update(Long id, ProductRequest request);
 }

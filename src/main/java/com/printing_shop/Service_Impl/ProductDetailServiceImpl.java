@@ -1,59 +1,89 @@
 package com.printing_shop.Service_Impl;
 
 import com.printing_shop.Enity.ProductDetail;
-import com.printing_shop.Enity.ProductEnity;
 import com.printing_shop.Repositories.ProductDetailRepository;
-import com.printing_shop.Repositories.ProductRepository;
 import com.printing_shop.Service.ProductDetailService;
-import com.printing_shop.dtoRequest.ProductDetailRequest;
+import com.printing_shop.dtoRequest.ProductRequest;
 import com.printing_shop.dtoRespose.ProductDetailResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ProductDetailServiceImpl implements ProductDetailService {
 
-    @Autowired
-    private ProductDetailRepository detailRepo;
+    private final ProductDetailRepository repository;
+    private final String UPLOAD_DIR = "uploads/products/";
 
-    @Autowired
-    private ProductRepository productRepo;
-
-    @Override
-    public ProductDetailResponse getDetailsByProductId(Long productId) {
-        ProductDetail detail = detailRepo.findByProductId(productId)
-                .orElseThrow(() -> new RuntimeException("Details not found for Product: " + productId));
-
-        ProductDetailResponse res = new ProductDetailResponse();
-        res.setProductId(detail.getProduct().getId());
-        res.setProductName(detail.getProduct().getName());
-        res.setPrice(detail.getProduct().getPrice());
-        res.setDescription(detail.getDescription());
-        res.setSpecifications(detail.getSpecifications());
-        res.setMaterialList(detail.getMaterialList());
-        return res;
+    private ProductDetailResponse mapToResponse(ProductDetail entity) {
+        return ProductDetailResponse.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .price(entity.getPrice())
+                .stock(entity.getStock())
+                .imageUrl(entity.getImageUrl())
+                .build();
     }
 
     @Override
-    public void saveOrUpdateDetail(ProductDetailRequest request) {
-        ProductEnity product = productRepo.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+    @Transactional
+    public ProductDetailResponse saveWithImage(ProductRequest request, MultipartFile file) throws IOException {
+        // 1. Save file to disk logic...
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        Path filePath = Paths.get("uploads/products/").resolve(fileName);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        ProductDetail detail = detailRepo.findByProductId(request.getProductId())
-                .orElse(new ProductDetail());
+        // 2. Map DTO to Entity (Check every field!)
+        ProductDetail entity = ProductDetail.builder()
+                .title(request.getTitle())
+                .name(request.getName())
+                .description(request.getDescription())
+                .price(request.getPrice())
+                .productId(request.getProductId())
+                .stock(request.getStock())
+                .imageUrl("/uploads/products/" + fileName) // The hidden field is set here
+                .build();
 
-        detail.setProduct(product);
-        detail.setDescription(request.getDescription());
-        detail.setSpecifications(request.getSpecifications());
-        detail.setMaterialList(request.getMaterialList());
-        
-        detailRepo.save(detail);
+        return mapToResponse(repository.save(entity));
+    }
+    @Override
+    public List<ProductDetailResponse> getAll() {
+        return repository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Override
-    public void deleteDetail(Long productId) {
-        ProductDetail detail = detailRepo.findByProductId(productId)
-                .orElseThrow(() -> new RuntimeException("Detail not found"));
-        detailRepo.delete(detail);
+    public ProductDetailResponse getById(Long id) {
+        ProductDetail entity = repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
+        return mapToResponse(entity);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) { repository.deleteById(id); }
+
+    @Override
+    public ProductDetailResponse create(ProductRequest request) {
+        ProductDetail entity = ProductDetail.builder()
+                .name(request.getName()).description(request.getDescription())
+                .price(request.getPrice()).stock(request.getStock()).build();
+        return mapToResponse(repository.save(entity));
+    }
+
+    @Override
+    public ProductDetailResponse update(Long id, ProductRequest request) {
+        ProductDetail existing = repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
+        existing.setName(request.getName());
+        existing.setDescription(request.getDescription());
+        existing.setPrice(request.getPrice());
+        existing.setStock(request.getStock());
+        return mapToResponse(repository.save(existing));
     }
 }
