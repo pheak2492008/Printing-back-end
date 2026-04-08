@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class ProductDetailRequest {
-    private Long productId;
+    private String name;
     private String description;
-    private String specifications;
-    private String materialList;
+    private Double price;
+    private Integer stock;
 }
