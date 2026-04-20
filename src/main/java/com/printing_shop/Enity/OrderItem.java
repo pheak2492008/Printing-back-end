@@ -1,7 +1,6 @@
 package com.printing_shop.Enity;
 
 import jakarta.persistence.*;
-import com.printing_shop.Enity.Material;
 import lombok.*;
 
 @Entity
@@ -24,11 +23,15 @@ public class OrderItem {
     @JoinColumn(name = "material_id", nullable = false)
     private Material material;
 
+    // Added to link to your ProductDetail (e.g., "Banner", "Sticker")
+    @ManyToOne
+    @JoinColumn(name = "product_detail_id")
+    private ProductDetail productDetail;
+
     private Double width;
     private Double length;
-    private Double pricePerM2;
-    private Double subtotal;
+    private Double pricePerM2; 
+    private Double subtotal;   
 
-    // ⚡ Remove this! Lombok handles it
-    // public static OrderItemBuilder builder() { return null; }
+    private Integer quantity;
 }

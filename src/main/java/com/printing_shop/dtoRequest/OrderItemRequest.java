@@ -9,9 +9,15 @@ public record OrderItemRequest(
     @NotNull(message = "Material ID is required")
     Long materialId,
     
+    @NotNull(message = "Product Detail ID is required")
+    Long productDetailId,
+    
     @NotNull(message = "Width is required")
     Double width,
     
     @NotNull(message = "Length is required")
-    Double length
+    Double length,
+    
+    @NotNull(message = "Quantity is required")
+    Integer quantity
 ) {}
