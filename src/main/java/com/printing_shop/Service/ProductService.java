@@ -1,5 +1,6 @@
 package com.printing_shop.Service;
 
+import com.printing_shop.Enity.ProductEntity;
 import com.printing_shop.dtoRequest.ProductRequest;
 import com.printing_shop.dtoRespose.ProductResponse;
 
@@ -15,5 +16,5 @@ public interface ProductService {
     ProductResponse update(Long id, ProductRequest request);
     void delete(Long id);
     ProductResponse saveWithImage(ProductRequest request, MultipartFile file) throws IOException;
-    
+	List<ProductResponse> getByCategoryId(Integer categoryId);
 }

@@ -63,6 +63,15 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductResponse> getAll() {
         return productRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
+    
+    @Override
+    public List<ProductResponse> getByCategoryId(Integer categoryId) {
+        // We use the repository to find entities, then map them to Response DTOs
+        return productRepository.findByProductId(categoryId)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
 
     @Override
     public ProductResponse getById(Long id) {
