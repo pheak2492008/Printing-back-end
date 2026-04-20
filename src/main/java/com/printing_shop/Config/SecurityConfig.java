@@ -69,6 +69,7 @@ public class SecurityConfig {
                 // 🔓 PUBLIC: Materials & inventory
                 .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
                 .requestMatchers("/api/inventory/**", "/api/v1/inventory/**").permitAll()
+                .requestMatchers("/api/order-items/**").permitAll()
 
              // 🔐 ADMIN ONLY (More specific rules first)
                 // Explicitly allow OPTIONS for Preflight requests
