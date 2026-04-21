@@ -47,8 +47,7 @@ public class SecurityConfig {
 
                 // 🔓 3. PUBLIC: Product Viewing (Essential for your 3 website cards)
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/product-details/**").permitAll()
-                
+                .requestMatchers(HttpMethod.GET, "/api/v1/product-details/**").permitAll()                
                 // 🔓 4. PUBLIC: Ordering Flow (Guest checkout)
                 .requestMatchers("/api/orders/calculate", "/api/orders/create").permitAll()
                 .requestMatchers("/api/orders/history/**", "/api/orders/{id}").permitAll()
