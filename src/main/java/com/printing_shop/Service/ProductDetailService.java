@@ -12,5 +12,6 @@ public interface ProductDetailService {
     ProductDetailResponse getById(Long id);
     void delete(Long id);
     ProductDetailResponse create(ProductRequest request);
-    ProductDetailResponse update(Long id, ProductRequest request);
+	ProductDetailResponse update(Long id, ProductRequest request);
+	ProductDetailResponse update(Long id, ProductRequest request, MultipartFile file) throws IOException;
 }

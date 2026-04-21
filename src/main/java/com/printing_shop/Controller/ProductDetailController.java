@@ -15,10 +15,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/product-details")
-@CrossOrigin(origins = "http://localhost:5178")
+@CrossOrigin(origins = "http://localhost:5173") // Fixed to match your React port
 @RequiredArgsConstructor
 public class ProductDetailController {
 
+    // The variable is named detailService
     private final ProductDetailService detailService;
 
     @GetMapping
@@ -38,6 +39,16 @@ public class ProductDetailController {
             @RequestPart("file") MultipartFile file) throws IOException {
         
         return ResponseEntity.status(201).body(detailService.saveWithImage(request, file));
+    }
+   
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')") // Only users with the ADMIN role can access this
+    public ResponseEntity<ProductDetailResponse> update(
+            @PathVariable Long id,
+            @RequestPart("request") ProductRequest request, 
+            @RequestPart(value = "file", required = false) MultipartFile file) throws IOException {
+        
+        return ResponseEntity.ok(detailService.update(id, request, file));
     }
 
     @DeleteMapping("/{id}")

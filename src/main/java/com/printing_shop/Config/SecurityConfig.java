@@ -47,7 +47,7 @@ public class SecurityConfig {
 
                 // 🔓 3. PUBLIC: Product Viewing (Essential for your 3 website cards)
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/product-details/**").permitAll()                
+                .requestMatchers(HttpMethod.GET, "/api/v1/product-details/**").permitAll()
                 // 🔓 4. PUBLIC: Ordering Flow (Guest checkout)
                 .requestMatchers("/api/orders/calculate", "/api/orders/create").permitAll()
                 .requestMatchers("/api/orders/history/**", "/api/orders/{id}").permitAll()
@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow Preflight
                 .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/product-details/**").hasAuthority("ADMIN")
                 .requestMatchers("/api/v1/admin/**", "/api/admin/**").hasAuthority("ADMIN")
                 .requestMatchers("/api/inventory/**", "/api/v1/inventory/**").hasAuthority("ADMIN")
                 .requestMatchers("/api/orders/getall").hasAuthority("ADMIN")

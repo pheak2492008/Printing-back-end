@@ -55,6 +55,31 @@ public class ProductDetailServiceImpl implements ProductDetailService {
         return mapToResponse(repository.save(entity));
     }
     @Override
+    @Transactional
+    public ProductDetailResponse update(Long id, ProductRequest request, MultipartFile file) throws IOException {
+        ProductDetail existing = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        // Updating fields from request
+        existing.setTitle(request.getTitle());
+        existing.setName(request.getName());
+        existing.setDescription(request.getDescription());
+        existing.setPrice(request.getPrice());
+        existing.setStock(request.getStock());
+        existing.setProductId(request.getProductId());
+
+        if (file != null && !file.isEmpty()) {
+            String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(UPLOAD_DIR).resolve(fileName);
+            Files.createDirectories(filePath.getParent());
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            existing.setImageUrl("/uploads/products/" + fileName);
+        }
+
+        return mapToResponse(repository.save(existing));
+    }
+
+    @Override
     public List<ProductDetailResponse> getAll() {
         return repository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
