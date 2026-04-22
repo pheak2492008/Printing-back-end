@@ -1,7 +1,7 @@
 package com.printing_shop.Controller;
 
 import com.printing_shop.dtoRequest.ProductRequest;
-import com.printing_shop.dtoRespose.ProductDetailResponse;
+import com.printing_shop.dtoResponse.ProductDetailResponse;
 import com.printing_shop.Service.ProductDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

@@ -4,7 +4,8 @@ import com.printing_shop.Enity.ProductDetail;
 import com.printing_shop.Repositories.ProductDetailRepository;
 import com.printing_shop.Service.ProductDetailService;
 import com.printing_shop.dtoRequest.ProductRequest;
-import com.printing_shop.dtoRespose.ProductDetailResponse;
+import com.printing_shop.dtoResponse.ProductDetailResponse;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

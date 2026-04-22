@@ -2,7 +2,8 @@ package com.printing_shop.Controller;
 
 import com.printing_shop.Service.InventoryService;
 import com.printing_shop.dtoRequest.InventoryRequest;
-import com.printing_shop.dtoRespose.InventoryResponse;
+import com.printing_shop.dtoResponse.InventoryResponse;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -6,8 +6,8 @@ import com.printing_shop.Service.JwtService;
 import com.printing_shop.Service.UserService;
 import com.printing_shop.dtoRequest.LoginRequest;
 import com.printing_shop.dtoRequest.RegisterRequest;
-import com.printing_shop.dtoRespose.LoginResponse; 
-import com.printing_shop.dtoRespose.RegisterResponse;
+import com.printing_shop.dtoResponse.LoginResponse;
+import com.printing_shop.dtoResponse.RegisterResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;

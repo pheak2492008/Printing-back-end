@@ -1,4 +1,4 @@
-package com.printing_shop.dtoRespose;
+package com.printing_shop.dtoResponse;
 
 import com.printing_shop.Enity.Material;
 

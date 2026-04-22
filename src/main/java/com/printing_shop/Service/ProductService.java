@@ -2,7 +2,7 @@ package com.printing_shop.Service;
 
 import com.printing_shop.Enity.ProductEntity;
 import com.printing_shop.dtoRequest.ProductRequest;
-import com.printing_shop.dtoRespose.ProductResponse;
+import com.printing_shop.dtoResponse.ProductResponse;
 
 import java.io.IOException;
 import java.util.List;

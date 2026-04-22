@@ -4,7 +4,8 @@ import com.printing_shop.Enity.ProfileEnity;
 import com.printing_shop.Repositories.ProfileRepository;
 import com.printing_shop.Service.ProfileService;
 import com.printing_shop.dtoRequest.ProfileRequest;
-import com.printing_shop.dtoRespose.ProfileResponse;
+import com.printing_shop.dtoResponse.ProfileResponse;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 

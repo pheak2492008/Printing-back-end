@@ -45,14 +45,20 @@ public class SecurityConfig {
                 // 🔓 2. PUBLIC: Static Files (Product Images)
                 .requestMatchers("/uploads/**").permitAll()
 
-                // 🔓 3. PUBLIC: Product Viewing (Essential for your 3 website cards)
+                // 🔓 3. PUBLIC: Product Viewing
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/product-details/**").permitAll()
-                // 🔓 4. PUBLIC: Ordering Flow (Guest checkout)
+
+                // 🔓 4. PUBLIC: Ordering & Reviews
                 .requestMatchers("/api/orders/calculate", "/api/orders/create").permitAll()
                 .requestMatchers("/api/orders/history/**", "/api/orders/{id}").permitAll()
                 .requestMatchers("/api/order-items/**").permitAll()
                 .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
+                
+                // --- REVIEW PERMISSIONS FIX ---
+                .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll() 
+                .requestMatchers(HttpMethod.POST, "/api/v1/reviews/add").permitAll() 
+                // ------------------------------------------------------
 
                 // 🔐 5. ADMIN ONLY: Management & Inventory
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow Preflight
