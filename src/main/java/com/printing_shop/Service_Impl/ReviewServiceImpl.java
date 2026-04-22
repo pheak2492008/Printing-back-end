@@ -40,4 +40,8 @@ public class ReviewServiceImpl implements ReviewService {
         
         return new ReviewResponse(formattedAverage, count);
     }
+    @Override
+    public List<Review> getAllReviews() {
+        return reviewRepository.findAll(); // Fetches data for the cards
+    }
 }

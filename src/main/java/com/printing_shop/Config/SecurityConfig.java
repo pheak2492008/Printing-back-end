@@ -58,6 +58,7 @@ public class SecurityConfig {
                 // --- REVIEW PERMISSIONS FIX ---
                 .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll() 
                 .requestMatchers(HttpMethod.POST, "/api/v1/reviews/add").permitAll() 
+               
                 // ------------------------------------------------------
 
                 // 🔐 5. ADMIN ONLY: Management & Inventory
