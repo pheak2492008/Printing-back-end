@@ -1,9 +1,13 @@
 spring:
   application:
     name: Printing
+  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
   datasource:
-    # Render provides the URL, Username, and Password via Environment Variables
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/printing_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:123123}
@@ -12,11 +16,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  # Render uses a dynamic port; if not provided, it falls back to 8081
   port: ${PORT:8081}

@@ -1,5 +1,6 @@
 package com.printing_shop.dtoResponse;
 
+import jakarta.persistence.Column;
 import lombok.*;
 
 @Data
@@ -9,8 +10,10 @@ import lombok.*;
 public class ProductDetailResponse {
     private Long id;
     private String name;
-    private String description;
     private Double price;
     private Integer stock;
     private String imageUrl;
+    
+    @Column(length = 1000) // Increase to 1000 characters
+    private String description;
 }
