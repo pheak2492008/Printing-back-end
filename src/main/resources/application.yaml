@@ -3,26 +3,15 @@ spring:
     name: Printing
 
   datasource:
-<<<<<<< HEAD
-    url: jdbc:postgresql://localhost:5432/printing_db
-    username: postgres
-    password: "123123"
-=======
     # Render provides the URL, Username, and Password via Environment Variables
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/printing_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:123123}
     driver-class-name: org.postgresql.Driver
->>>>>>> development
 
   jpa:
     hibernate:
       ddl-auto: update
-<<<<<<< HEAD
-
-server:
-  port: 8081
-=======
     show-sql: true
     properties:
       hibernate:
@@ -31,4 +20,3 @@ server:
 server:
   # Render uses a dynamic port; if not provided, it falls back to 8081
   port: ${PORT:8081}
->>>>>>> development
