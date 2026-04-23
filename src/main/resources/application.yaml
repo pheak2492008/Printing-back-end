@@ -1,17 +1,18 @@
 spring:
   datasource:
-    # 1. Tries Render Environment Variable
-    # 2. Falls back to Docker Compose 'db' hostname
-    # 3. Falls back to localhost
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db:5432/printing_db}
+    # Render provides the full URL in SPRING_DATASOURCE_URL
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/printing_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:123}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
 
 server:
+  # Render automatically sets the PORT variable
   port: ${PORT:8081}
