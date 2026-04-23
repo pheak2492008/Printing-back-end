@@ -1,39 +1,15 @@
 services:
   db:
     image: postgres:15
-    container_name: postgres_db
-    restart: always
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+    container_name: printing-db-container
     ports:
-      - "${DB_LOCAL_PORT}:5432"
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123123
+      POSTGRES_DB: printing_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - printshop-network
-
-  printing-backend:
-    build: .
-    container_name: printing_backend_container
-    ports:
-      - "8081:8081"
-    environment:
-      # This URL is for when the app runs INSIDE the container
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-    depends_on:
-      - db
-    networks:
-      - printshop-network
-
 
 volumes:
   postgres_data:
-
-networks:
-  printshop-network:
-    driver: bridge

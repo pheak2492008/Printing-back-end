@@ -3,7 +3,7 @@ spring:
     name: Printing
 
   datasource:
-    # This uses the Render Environment Variable if it exists, otherwise defaults to localhost
+    # Render provides the URL, Username, and Password via Environment Variables
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/printing_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:123123}
@@ -12,11 +12,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
-        # Force the dialect so Hibernate doesn't crash if the connection is slow
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  # Render uses port 10000, your laptop uses 8081. This handles both.
+  # Render uses a dynamic port; if not provided, it falls back to 8081
   port: ${PORT:8081}
