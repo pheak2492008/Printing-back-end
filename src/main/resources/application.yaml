@@ -1,22 +1,17 @@
 spring:
-  application:
-    name: Printing
-
   datasource:
-    # This uses the Render Environment Variable if it exists, otherwise defaults to localhost
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/printing_db}
+    # 1. Tries Render Environment Variable
+    # 2. Falls back to Docker Compose 'db' hostname
+    # 3. Falls back to localhost
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db:5432/printing_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:123123}
-    driver-class-name: org.postgresql.Driver
-
+    password: ${SPRING_DATASOURCE_PASSWORD:123}
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        # Force the dialect so Hibernate doesn't crash if the connection is slow
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  # Render uses port 10000, your laptop uses 8081. This handles both.
   port: ${PORT:8081}
