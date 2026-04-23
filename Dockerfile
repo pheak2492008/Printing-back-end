@@ -1,11 +1,14 @@
-# Step 1: Build the application
-FROM maven:3.9.4-eclipse-temurin-17 AS build
+# Stage 1: Build the JAR (Updated to JDK 21)
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
 
-# Step 2: Run the application
-FROM eclipse-temurin:17-jdk-alpine
-COPY --from=build /target/*.jar app.jar
-# Expose the port (Render will override this with its own PORT variable)
+# Stage 2: Run the JAR (Updated to JRE 21)
+FROM eclipse-temurin:21-jdk-alpine
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8081
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
