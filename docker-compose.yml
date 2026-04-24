@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # 1. DATABASE SERVICE
   db:
@@ -5,31 +7,35 @@ services:
     container_name: printing-db-container
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123123
+      POSTGRES_PASSWORD: "123123"
       POSTGRES_DB: printing_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - proxy
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d printing_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # 2. SPRING BOOT APP
   printing-app:
-    build: .
+    # Changed from 'image' to 'build' to use your local Dockerfile
+    build: . 
     container_name: printing
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       SPRING_APPLICATION_NAME: Printing
-
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/printing_db
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 123123
-
+      SPRING_DATASOURCE_PASSWORD: "123123"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: false
-
-      PORT: 8081
+      SPRING_JPA_SHOW_SQL: "false"
+      SERVER_PORT: 8081
     ports:
       - "8081:8081"
     networks:
