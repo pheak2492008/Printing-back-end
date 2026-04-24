@@ -1,15 +1,44 @@
 services:
+  # 1. DATABASE SERVICE
   db:
     image: postgres:15
     container_name: printing-db-container
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123123
       POSTGRES_DB: printing_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - proxy
+    restart: always
+
+  # 2. SPRING BOOT APP
+  printing-app:
+    build: .
+    container_name: printing
+    depends_on:
+      - db
+    environment:
+      SPRING_APPLICATION_NAME: Printing
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/printing_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123123
+
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: false
+
+      PORT: 8081
+    ports:
+      - "8081:8081"
+    networks:
+      - proxy
+    restart: always
 
 volumes:
   postgres_data:
+
+networks:
+  proxy:
+    driver: bridge
