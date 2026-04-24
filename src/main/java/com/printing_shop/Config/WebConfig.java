@@ -7,7 +7,6 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,15 +15,14 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // This helps your browser see the images at http://localhost:8081/uploads/filename.jpg
+        // Serves uploaded images from the /uploads folder
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:uploads/"); // Pointing to the root uploads folder
+                .addResourceLocations("file:uploads/");
     }
 
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
-        // FIX FOR THE 500 ERROR:
-        // This allows Spring to read the "request" part as JSON even if Swagger sends it as octet-stream
+        // Fix for Swagger/Postman multipart-form requests
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
         converters.add(converter);

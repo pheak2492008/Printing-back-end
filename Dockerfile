@@ -1,23 +1,16 @@
-# --- Stage 1: Build the application ---
+# Stage 1: Build with Maven
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
-
-# Copy the pom and source code
-COPY pom.xml .
-COPY src ./src
-
-# Build the jar file, skipping tests for faster deployment
+COPY . .
 RUN mvn clean package -DskipTests
 
-# --- Stage 2: Run the application ---
-FROM eclipse-temurin:21-jre
+# Stage 2: Run with Java 21
+FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
-
-# Copy the jar from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Expose the port your app runs on
-EXPOSE 8081
+# Create folder for images (Temporary storage on Render)
+RUN mkdir -p uploads/products
 
-# Run the application
+EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "app.jar"]

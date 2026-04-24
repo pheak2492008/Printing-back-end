@@ -37,32 +37,27 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authorizeHttpRequests(auth -> auth
-
-                // 🔓 1. PUBLIC: Auth & Swagger
+                // 1. PUBLIC: Auth & Swagger
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
-                // 🔓 2. PUBLIC: Static Files (Product Images)
+                // 2. PUBLIC: Static Files (Product Images)
                 .requestMatchers("/uploads/**").permitAll()
 
-                // 🔓 3. PUBLIC: Product Viewing
+                // 3. PUBLIC: Product Viewing
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/product-details/**").permitAll()
 
-                // 🔓 4. PUBLIC: Ordering & Reviews
+                // 4. PUBLIC: Ordering & Reviews
                 .requestMatchers("/api/orders/calculate", "/api/orders/create").permitAll()
                 .requestMatchers("/api/orders/history/**", "/api/orders/{id}").permitAll()
                 .requestMatchers("/api/order-items/**").permitAll()
                 .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
-                
-                // --- REVIEW PERMISSIONS FIX ---
                 .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll() 
                 .requestMatchers(HttpMethod.POST, "/api/v1/reviews/add").permitAll() 
-               
-                // ------------------------------------------------------
 
-                // 🔐 5. ADMIN ONLY: Management & Inventory
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow Preflight
+                // 5. ADMIN ONLY: Management & Inventory
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
                 .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/product-details/**").hasAuthority("ADMIN")
@@ -70,7 +65,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/inventory/**", "/api/v1/inventory/**").hasAuthority("ADMIN")
                 .requestMatchers("/api/orders/getall").hasAuthority("ADMIN")
 
-                // 🔐 6. CATCH-ALL
+                // 6. CATCH-ALL
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -83,16 +78,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://localhost:5173", // Your Website
-                "http://localhost:5174", // Your Admin Dashboard
-                "http://localhost:5178",
-                "http://localhost:8081"
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000", "http://localhost:5173", "http://localhost:5174",
+                "https://your-frontend-link.onrender.com" // UPDATE THIS
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -8,6 +8,7 @@ spring:
       max-request-size: 10MB
 
   datasource:
+    # Uses Render environment variables if present, otherwise defaults to local
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/printing_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:123123}
@@ -16,9 +17,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
 
 server:
   port: ${PORT:8081}
