@@ -5,7 +5,8 @@ import com.printing_shop.Enity.*;
 import com.printing_shop.Repositories.*;
 import com.printing_shop.Service.OrderService;
 import com.printing_shop.dtoRequest.OrderRequest;
-import com.printing_shop.dtoRespose.OrderResponse;
+import com.printing_shop.dtoResponse.OrderResponse;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,10 +87,14 @@ public class OrderServiceImpl implements OrderService {
                 .phoneNumber(order.getPhoneNumber())
                 .width(order.getWidth())
                 .length(order.getLength())
+                .inkChoice(order.getInkChoice())      // This will now work
+                .dpiQuality(order.getDpiQuality())    // This will now work without errors
+                .hasGrommets(order.getHasGrommets())  // This will now work
+                .hasHems(order.getHasHems())          // This will now work
                 .totalPrice(order.getTotalPrice())
                 .status(order.getStatus())
                 .designFileUrl(order.getDesignFileUrl())
-                .description(order.getDescription()) // ✅ Return the text
+                .description(order.getDescription())
                 .material(order.getMaterial())
                 .build();
     }

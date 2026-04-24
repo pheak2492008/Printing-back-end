@@ -8,5 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface ProfileRepository extends JpaRepository<ProfileEnity, Integer> {
-    Optional<ProfileEnity> findByUserId(Integer userId);
+    // Change Integer to Long here to match the Entity/Database
+    Optional<ProfileEnity> findByUserId(Long userId);
 }

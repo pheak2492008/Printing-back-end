@@ -1,42 +1,60 @@
 package com.printing_shop.Controller;
 
+import com.printing_shop.dtoRequest.ProductRequest;
+import com.printing_shop.dtoResponse.ProductDetailResponse;
 import com.printing_shop.Service.ProductDetailService;
-import com.printing_shop.dtoRequest.ProductDetailRequest;
-import com.printing_shop.dtoRespose.ProductDetailResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/product-details")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173") // Fixed to match your React port
+@RequiredArgsConstructor
 public class ProductDetailController {
 
-    @Autowired
-    private ProductDetailService productDetailService;
+    // The variable is named detailService
+    private final ProductDetailService detailService;
 
-    @PostMapping("/create")
-    public ResponseEntity<ProductDetailResponse> createDetail(@RequestBody ProductDetailRequest request) {
-        return ResponseEntity.ok(productDetailService.createDetail(request));
+    @GetMapping
+    public List<ProductDetailResponse> getAll() {
+        return detailService.getAll();
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<ProductDetailResponse> updateDetail(
-            @PathVariable Integer id,
-            @RequestBody ProductDetailRequest request) {
-        return ResponseEntity.ok(productDetailService.updateDetail(id, request));
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDetailResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(detailService.getById(id));
     }
 
-    @GetMapping("/product/{productId}")
-    public ResponseEntity<List<ProductDetailResponse>> getByProduct(@PathVariable Integer productId) {
-        return ResponseEntity.ok(productDetailService.getDetailsByProductId(productId));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductDetailResponse> create(
+            @RequestPart("request") ProductRequest request, 
+            @RequestPart("file") MultipartFile file) throws IOException {
+        
+        return ResponseEntity.status(201).body(detailService.saveWithImage(request, file));
+    }
+   
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')") // Only users with the ADMIN role can access this
+    public ResponseEntity<ProductDetailResponse> update(
+            @PathVariable Long id,
+            @RequestPart("request") ProductRequest request, 
+            @RequestPart(value = "file", required = false) MultipartFile file) throws IOException {
+        
+        return ResponseEntity.ok(detailService.update(id, request, file));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Integer id) {
-        productDetailService.deleteDetail(id);
-        return ResponseEntity.ok("Product detail removed successfully");
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        detailService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,48 +1,53 @@
 package com.printing_shop.Controller;
 
-import com.printing_shop.Enity.ProductEnity;
+import com.printing_shop.dtoRequest.ProductRequest;
+import com.printing_shop.dtoResponse.ProductResponse;
 import com.printing_shop.Service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/products")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5178"})
 @RequiredArgsConstructor
-@CrossOrigin
 public class ProductController {
 
     private final ProductService productService;
 
-    // CREATE
-    @PostMapping
-    public ProductEnity create(@RequestBody ProductEnity product) {
-        return productService.create(product);
-    }
-
-    // GET ALL
     @GetMapping
-    public List<ProductEnity> getAll() {
+    public List<ProductResponse> getAll() {
         return productService.getAll();
     }
 
-    // GET BY ID
     @GetMapping("/{id}")
-    public ProductEnity getById(@PathVariable Long id) {
-        return productService.getById(id);
+    public ResponseEntity<ProductResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getById(id));
     }
 
-    // UPDATE
-    @PutMapping("/{id}")
-    public ProductEnity update(@PathVariable Long id, @RequestBody ProductEnity product) {
-        return productService.update(id, product);
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ProductResponse> createWithImage(
+            @RequestPart("file") MultipartFile file, 
+            @RequestPart("request") ProductRequest request // Changed from @ModelAttribute or @RequestBody
+    ) throws IOException {
+        return ResponseEntity.ok(productService.saveWithImage(request, file));
     }
 
-    // DELETE
     @DeleteMapping("/{id}")
-    public String delete(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         productService.delete(id);
-        return "Product deleted successfully";
+        return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<ProductResponse>> getByCategory(@PathVariable Integer categoryId) {
+        return ResponseEntity.ok(productService.getByCategoryId(categoryId));
     }
 }

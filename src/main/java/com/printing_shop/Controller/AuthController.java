@@ -2,8 +2,9 @@ package com.printing_shop.Controller;
 
 import com.printing_shop.Service.UserService;
 import com.printing_shop.dtoRequest.*;
-import com.printing_shop.dtoRespose.LoginResponse;
-import com.printing_shop.dtoRespose.RegisterResponse;
+import com.printing_shop.dtoResponse.LoginResponse;
+import com.printing_shop.dtoResponse.RegisterResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

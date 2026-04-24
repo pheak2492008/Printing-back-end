@@ -1,7 +1,8 @@
 package com.printing_shop.Service;
 
 import com.printing_shop.dtoRequest.InventoryRequest;
-import com.printing_shop.dtoRespose.InventoryResponse;
+import com.printing_shop.dtoResponse.InventoryResponse;
+
 import java.util.List;
 
 public interface InventoryService {

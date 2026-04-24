@@ -7,6 +7,7 @@ import com.printing_shop.dtoRequest.OrderItemRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,21 +20,18 @@ public class OrderItemController {
     @Autowired
     private OrderItemService orderItemService;
 
-    /**
-     * POST /api/order-items
-     * We use the ID inside the RequestBody for better consistency with your Service logic.
-     */
     @PostMapping
+    @PreAuthorize("isAuthenticated()") 
     public ResponseEntity<OrderItem> addItemToOrder(@RequestBody OrderItemRequest request) {
-        // The Service now handles finding the Order and the Material
         OrderItem savedItem = orderItemService.addItemToOrder(request);
         return new ResponseEntity<>(savedItem, HttpStatus.CREATED);
     }
 
-    /**
-     * GET /api/order-items/order/{orderId}
-     * Retrieves all items belonging to a specific order.
-     */
+    @GetMapping("/all")
+    public ResponseEntity<List<OrderItem>> getAllItems() {
+        return ResponseEntity.ok(orderItemService.getAllOrderItems());
+    }
+  
     @GetMapping("/order/{orderId}")
     public ResponseEntity<List<OrderItem>> getItemsByOrder(@PathVariable Long orderId) {
         // Matches the method name in your updated Service interface

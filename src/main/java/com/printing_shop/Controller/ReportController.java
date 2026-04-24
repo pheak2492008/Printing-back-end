@@ -1,7 +1,7 @@
 package com.printing_shop.Controller;
 
 import com.printing_shop.dtoRequest.ReportRequestDTO;
-import com.printing_shop.dtoRespose.ReportResponseDTO;
+import com.printing_shop.dtoResponse.ReportResponseDTO;
 import com.printing_shop.Service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

@@ -8,50 +8,67 @@ import com.printing_shop.Repositories.OrderRepository;
 import com.printing_shop.Repositories.OrderItemRepository;
 import com.printing_shop.Service.OrderItemService;
 import com.printing_shop.dtoRequest.OrderItemRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class OrderItemServiceImpl implements OrderItemService {
 
-    @Autowired
-    private OrderItemRepository orderItemRepository;
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private MaterialRepository materialRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderRepository orderRepository;
+    private final MaterialRepository materialRepository;
 
     @Override
+    @Transactional
     public OrderItem addItemToOrder(OrderItemRequest request) {
+        // 1. Fetch Order and Material based on IDs in the RequestBody
         Order order = orderRepository.findById(request.orderId())
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + request.orderId()));
-
+                .orElseThrow(() -> new RuntimeException("Order not found"));
         Material material = materialRepository.findById(request.materialId())
-                .orElseThrow(() -> new RuntimeException("Material not found with ID: " + request.materialId()));
+                .orElseThrow(() -> new RuntimeException("Material not found"));
 
-        // Area * Price calculation
-        Double area = request.width() * request.length();
-        Double subtotal = area * material.getPricePerM2();
+        // 2. Calculation Logic based on ERD (Area * Price per M2)
+        Double pricePerM2 = material.getPricePerM2();
+        Double subtotal = (request.width() * request.length()) * pricePerM2;
 
-        OrderItem orderItem = OrderItem.builder()
+        // 3. Build the Entity
+        OrderItem item = OrderItem.builder()
                 .order(order)
                 .material(material)
                 .width(request.width())
                 .length(request.length())
-                .pricePerM2(material.getPricePerM2())
+                .pricePerM2(pricePerM2)
                 .subtotal(subtotal)
                 .build();
 
-        return orderItemRepository.save(orderItem);
+        OrderItem saved = orderItemRepository.save(item);
+
+        // 4. Update the parent Order total price
+        updateOrderTotal(order);
+
+        return saved;
+    }
+    @Override
+    public List<OrderItem> getAllOrderItems() {
+        return orderItemRepository.findAll();
     }
 
     @Override
     public List<OrderItem> getItemsByOrderId(Long orderId) {
-        // This calls the custom method in your OrderItemRepository
-        return orderItemRepository.findByOrderOrderId(orderId);
+        return orderItemRepository.findByOrder_OrderId(orderId);
+    }
+
+    private void updateOrderTotal(Order order) {
+        // Recalculate the sum of all items in this order
+        Double newTotal = orderItemRepository.findByOrder_OrderId(order.getOrderId())
+                .stream()
+                .mapToDouble(OrderItem::getSubtotal)
+                .sum();
+        order.setTotalPrice(newTotal);
+        orderRepository.save(order);
     }
 }

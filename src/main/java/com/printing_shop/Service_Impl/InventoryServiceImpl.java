@@ -4,7 +4,7 @@ import com.printing_shop.Repositories.InventoryRepository;
 import com.printing_shop.Repositories.MaterialRepository;
 import com.printing_shop.Service.InventoryService;
 import com.printing_shop.dtoRequest.InventoryRequest;
-import com.printing_shop.dtoRespose.InventoryResponse;
+import com.printing_shop.dtoResponse.InventoryResponse;
 import com.printing_shop.Enity.Inventory;
 import com.printing_shop.Enity.Material;
 import lombok.RequiredArgsConstructor;

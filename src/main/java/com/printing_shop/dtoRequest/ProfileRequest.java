@@ -1,9 +1,13 @@
 package com.printing_shop.dtoRequest;
 
-import lombok.Data;
+import lombok.*;
 
 @Data
+@NoArgsConstructor  
+@AllArgsConstructor
+@Builder
 public class ProfileRequest {
-    private String name;
-    private String email;
+    private String fullName;
+    private String phone;
+    private String address;
 }
