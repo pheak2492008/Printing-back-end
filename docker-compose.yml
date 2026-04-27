@@ -6,38 +6,34 @@ services:
     image: postgres:15
     container_name: printing-db-container
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "123123"
+      # Use POSTGRES_USER and POSTGRES_PASSWORD (not 'username')
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-123123}
       POSTGRES_DB: printing_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - proxy
     restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d printing_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # 2. SPRING BOOT APP
   printing-app:
-    # Changed from 'image' to 'build' to use your local Dockerfile
-    build: . 
+    image: pheak2492008/printing-back-end:latest
     container_name: printing
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     environment:
-      SPRING_APPLICATION_NAME: Printing
+      SPRING_APPLICATION_NAME: ${SPRING_APPLICATION_NAME:-Printing}
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/printing_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: "123123"
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-123123}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "false"
-      SERVER_PORT: 8081
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL:-false}
+      # This tells Spring Boot which port to run on inside the container
+      SERVER_PORT: ${PORT:-8081}
     ports:
-      - "8081:8081"
+      # "HostPort:ContainerPort"
+      - "${PORT:-8081}:${PORT:-8081}"
     networks:
       - proxy
     restart: always
@@ -47,4 +43,4 @@ volumes:
 
 networks:
   proxy:
-    driver: bridge
+    external: true
