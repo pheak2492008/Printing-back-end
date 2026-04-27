@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/products")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5178"})
+@CrossOrigin(origins = {"http://localhost:5173"})
 @RequiredArgsConstructor
 public class ProductController {
 
@@ -31,13 +31,28 @@ public class ProductController {
         return ResponseEntity.ok(productService.getById(id));
     }
 
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<ProductResponse>> getByCategory(@PathVariable Integer categoryId) {
+        return ResponseEntity.ok(productService.getByCategoryId(categoryId));
+    }
+
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<ProductResponse> createWithImage(
+    public ResponseEntity<ProductResponse> create(
             @RequestPart("file") MultipartFile file, 
-            @RequestPart("request") ProductRequest request // Changed from @ModelAttribute or @RequestBody
+            @RequestPart("request") ProductRequest request
     ) throws IOException {
         return ResponseEntity.ok(productService.saveWithImage(request, file));
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ProductResponse> update(
+            @PathVariable Long id,
+            @RequestPart(value = "file", required = false) MultipartFile file, 
+            @RequestPart("request") ProductRequest request
+    ) throws IOException {
+        return ResponseEntity.ok(productService.update(id, request, file));
     }
 
     @DeleteMapping("/{id}")
@@ -45,9 +60,5 @@ public class ProductController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<ProductResponse>> getByCategory(@PathVariable Integer categoryId) {
-        return ResponseEntity.ok(productService.getByCategoryId(categoryId));
     }
 }

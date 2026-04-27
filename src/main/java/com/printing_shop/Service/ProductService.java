@@ -16,5 +16,6 @@ public interface ProductService {
     ProductResponse update(Long id, ProductRequest request);
     void delete(Long id);
     ProductResponse saveWithImage(ProductRequest request, MultipartFile file) throws IOException;
+    ProductResponse update(Long id, ProductRequest request, MultipartFile file) throws IOException;
 	List<ProductResponse> getByCategoryId(Integer categoryId);
 }

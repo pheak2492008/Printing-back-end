@@ -36,30 +36,59 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
-    @Override
-    @Transactional
-    public ProductResponse saveWithImage(ProductRequest request, MultipartFile file) throws IOException {
-        // 1. Create Folder
+    private String saveImage(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) return null;
+
+        // 1. Create Folder if it doesn't exist
         File dir = new File(UPLOAD_DIR);
         if (!dir.exists()) dir.mkdirs();
 
-        // 2. Save File
+        // 2. Generate unique filename
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         Path filePath = Paths.get(UPLOAD_DIR + fileName);
+        
+        // 3. Save to local disk
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        // 3. Build Entity (Mapping request data to Entity)
+        return "/uploads/" + fileName;
+    }
+
+    @Override
+    @Transactional
+    public ProductResponse saveWithImage(ProductRequest request, MultipartFile file) throws IOException {
+        String imageUrl = saveImage(file);
+
         ProductEntity entity = ProductEntity.builder()
-                .title(request.getTitle())       // Not Null now
+                .title(request.getTitle())
                 .description(request.getDescription())
                 .price(request.getPrice())
-                .imageUrl("/uploads/" + fileName)
+                .imageUrl(imageUrl)
                 .productId(request.getProductId())
                 .build();
 
         return mapToResponse(productRepository.save(entity));
     }
+    
+    @Override
+    @Transactional
+    public ProductResponse update(Long id, ProductRequest request, MultipartFile file) throws IOException {
+        ProductEntity entity = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
+        // 1. Update text fields
+        entity.setTitle(request.getTitle());
+        entity.setDescription(request.getDescription());
+        entity.setPrice(request.getPrice());
+        entity.setProductId(request.getProductId());
+
+        // 2. Update image ONLY if a new one is provided
+        if (file != null && !file.isEmpty()) {
+            String newImageUrl = saveImage(file);
+            entity.setImageUrl(newImageUrl);
+        }
+
+        return mapToResponse(productRepository.save(entity));
+    }
     @Override
     public List<ProductResponse> getAll() {
         return productRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
