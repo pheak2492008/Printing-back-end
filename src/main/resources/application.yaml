@@ -1,25 +1,23 @@
 spring:
   application:
-    name: ${SPRING_APPLICATION_NAME:Printing}
-
+    name: Printing
+  
   servlet:
     multipart:
-      max-file-size: ${MULTIPART_MAX_FILE_SIZE:10MB}
-      max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:10MB}
+      max-file-size: 10MB
+      max-request-size: 10MB
 
   datasource:
+    # Uses Render environment variables if present, otherwise defaults to local
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/printing_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:123123}
-    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.postgresql.Driver}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
-    show-sql: ${SPRING_JPA_SHOW_SQL:false}
-    properties:
-      hibernate:
-        format_sql: true
+      ddl-auto: update
+    show-sql: false
 
 server:
   port: ${PORT:8081}
