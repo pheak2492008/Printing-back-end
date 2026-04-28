@@ -1,18 +1,15 @@
 spring:
   application:
     name: Printing
-
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
-
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/printing_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:123123}
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
@@ -20,7 +17,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
   port: ${PORT:8081}
@@ -28,9 +24,11 @@ server:
 
 # ====================== Cloudinary Configuration ======================
 cloudinary:
-  cloud-name: ${CLOUDINARY_CLOUD_NAME}
-  api-key: ${CLOUDINARY_API_KEY}
-  api-secret: ${CLOUDINARY_API_SECRET}
+  # This syntax allows the app to check for an Environment Variable first, 
+  # but uses your hardcoded string as a fallback if the variable is missing.
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:ducs4tcuq}
+  api-key: ${CLOUDINARY_API_KEY:843776387237543}
+  api-secret: ${CLOUDINARY_API_SECRET:6j2nvD3d4uLfZh6_OF2iWvOlqXM}
 
 logging:
   level:
