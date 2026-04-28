@@ -1,34 +1,61 @@
 package com.printing_shop.Service_Impl;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.printing_shop.Enity.ProductDetail;
 import com.printing_shop.Repositories.ProductDetailRepository;
 import com.printing_shop.Service.ProductDetailService;
 import com.printing_shop.dtoRequest.ProductRequest;
 import com.printing_shop.dtoResponse.ProductDetailResponse;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductDetailServiceImpl implements ProductDetailService {
 
-    private final ProductDetailRepository repository;
-    private final String UPLOAD_DIR = "uploads/products/";
+    private final ProductDetailRepository productDetailRepository;
+    private final Cloudinary cloudinary;
 
+    /**
+     * Upload image to Cloudinary
+     */
+    private String uploadToCloudinary(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
+
+        Map<?, ?> uploadResult = cloudinary.uploader().upload(
+                file.getBytes(),
+                ObjectUtils.asMap(
+                        "resource_type", "image",
+                        "folder", "printing/products",
+                        "use_filename", true,
+                        "unique_filename", true
+                )
+        );
+
+        return uploadResult.get("secure_url").toString();
+    }
+
+    /**
+     * Map Entity to Response DTO
+     */
     private ProductDetailResponse mapToResponse(ProductDetail entity) {
         return ProductDetailResponse.builder()
                 .id(entity.getId())
+                .title(entity.getTitle())
                 .name(entity.getName())
-                .description(entity.getDescription())
                 .price(entity.getPrice())
+                .description(entity.getDescription())
+                .productId(entity.getProductId())
                 .stock(entity.getStock())
                 .imageUrl(entity.getImageUrl())
                 .build();
@@ -37,79 +64,72 @@ public class ProductDetailServiceImpl implements ProductDetailService {
     @Override
     @Transactional
     public ProductDetailResponse saveWithImage(ProductRequest request, MultipartFile file) throws IOException {
-        // 1. Save file to disk logic...
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = Paths.get("uploads/products/").resolve(fileName);
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        String imageUrl = uploadToCloudinary(file);
 
-        // 2. Map DTO to Entity (Check every field!)
         ProductDetail entity = ProductDetail.builder()
                 .title(request.getTitle())
                 .name(request.getName())
-                .description(request.getDescription())
                 .price(request.getPrice())
+                .description(request.getDescription())
                 .productId(request.getProductId())
                 .stock(request.getStock())
-                .imageUrl("/uploads/products/" + fileName) // The hidden field is set here
+                .imageUrl(imageUrl)
                 .build();
 
-        return mapToResponse(repository.save(entity));
+        ProductDetail saved = productDetailRepository.save(entity);
+        return mapToResponse(saved);
     }
+
     @Override
     @Transactional
     public ProductDetailResponse update(Long id, ProductRequest request, MultipartFile file) throws IOException {
-        ProductDetail existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+        ProductDetail entity = productDetailRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product Detail not found with id: " + id));
 
-        // Updating fields from request
-        existing.setTitle(request.getTitle());
-        existing.setName(request.getName());
-        existing.setDescription(request.getDescription());
-        existing.setPrice(request.getPrice());
-        existing.setStock(request.getStock());
-        existing.setProductId(request.getProductId());
+        entity.setTitle(request.getTitle());
+        entity.setName(request.getName());
+        entity.setPrice(request.getPrice());
+        entity.setDescription(request.getDescription());
+        entity.setProductId(request.getProductId());
+        entity.setStock(request.getStock());
 
         if (file != null && !file.isEmpty()) {
-            String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(UPLOAD_DIR).resolve(fileName);
-            Files.createDirectories(filePath.getParent());
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            existing.setImageUrl("/uploads/products/" + fileName);
+            String newImageUrl = uploadToCloudinary(file);
+            entity.setImageUrl(newImageUrl);
         }
 
-        return mapToResponse(repository.save(existing));
+        ProductDetail updated = productDetailRepository.save(entity);
+        return mapToResponse(updated);
     }
 
     @Override
     public List<ProductDetailResponse> getAll() {
-        return repository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
+        return productDetailRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
     public ProductDetailResponse getById(Long id) {
-        ProductDetail entity = repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
-        return mapToResponse(entity);
+        return productDetailRepository.findById(id)
+                .map(this::mapToResponse)
+                .orElseThrow(() -> new RuntimeException("Product Detail not found with id: " + id));
     }
 
     @Override
-    @Transactional
-    public void delete(Long id) { repository.deleteById(id); }
+    public void delete(Long id) {
+        productDetailRepository.deleteById(id);
+    }
 
+    // Legacy methods (not used)
     @Override
     public ProductDetailResponse create(ProductRequest request) {
-        ProductDetail entity = ProductDetail.builder()
-                .name(request.getName()).description(request.getDescription())
-                .price(request.getPrice()).stock(request.getStock()).build();
-        return mapToResponse(repository.save(entity));
+        return null;
     }
 
     @Override
     public ProductDetailResponse update(Long id, ProductRequest request) {
-        ProductDetail existing = repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
-        existing.setName(request.getName());
-        existing.setDescription(request.getDescription());
-        existing.setPrice(request.getPrice());
-        existing.setStock(request.getStock());
-        return mapToResponse(repository.save(existing));
+        return null;
     }
 }
