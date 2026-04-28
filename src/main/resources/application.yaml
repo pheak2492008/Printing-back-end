@@ -1,15 +1,18 @@
 spring:
   application:
     name: Printing
+
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/printing_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:123123}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
@@ -18,18 +21,38 @@ spring:
       hibernate:
         format_sql: true
 
+  # ====================== Static Resources (Important for images) ======================
+  web:
+    resources:
+      static-locations: classpath:/static/,file:./uploads/
+
 server:
   port: ${PORT:8081}
   shutdown: graceful
 
 # ====================== Cloudinary Configuration ======================
 cloudinary:
-  # This syntax allows the app to check for an Environment Variable first, 
-  # but uses your hardcoded string as a fallback if the variable is missing.
   cloud-name: ${CLOUDINARY_CLOUD_NAME:ducs4tcuq}
   api-key: ${CLOUDINARY_API_KEY:843776387237543}
   api-secret: ${CLOUDINARY_API_SECRET:6j2nvD3d4uLfZh6_OF2iWvOlqXM}
 
+# ====================== Logging ======================
 logging:
   level:
     com.printing_shop: INFO
+    org.springframework.web: INFO
+
+# ====================== Environment Variables (for local development) ======================
+SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/printing_db
+SPRING_DATASOURCE_USERNAME: postgres
+SPRING_DATASOURCE_PASSWORD: 123123
+SPRING_JPA_HIBERNATE_DDL_AUTO: update
+SPRING_JPA_SHOW_SQL: true
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME: ducs4tcuq
+CLOUDINARY_API_KEY: 843776387237543
+CLOUDINARY_API_SECRET: 6j2nvD3d4uLfZh6_OF2iWvOlqXM
+
+# Server Port
+PORT: 8081
