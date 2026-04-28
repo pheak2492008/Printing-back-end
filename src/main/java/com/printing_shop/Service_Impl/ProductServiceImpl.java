@@ -1,5 +1,7 @@
 package com.printing_shop.Service_Impl;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.printing_shop.Enity.ProductEntity;
 import com.printing_shop.Repositories.ProductRepository;
 import com.printing_shop.Service.ProductService;
@@ -11,11 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-    private final String UPLOAD_DIR = "uploads/";
+    private final Cloudinary cloudinary; // Inject the Cloudinary bean
 
     private ProductResponse mapToResponse(ProductEntity entity) {
         return ProductResponse.builder()
@@ -31,32 +31,30 @@ public class ProductServiceImpl implements ProductService {
                 .title(entity.getTitle())
                 .description(entity.getDescription())
                 .price(entity.getPrice())
-                .imageUrl(entity.getImageUrl())
+                .imageUrl(entity.getImageUrl()) // This will now be a https:// link
                 .productId(entity.getProductId())
                 .build();
     }
 
-    private String saveImage(MultipartFile file) throws IOException {
+    /**
+     * NEW: Uploads file to Cloudinary and returns the Secure URL
+     */
+    private String uploadToCloudinary(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) return null;
-
-        // 1. Create Folder if it doesn't exist
-        File dir = new File(UPLOAD_DIR);
-        if (!dir.exists()) dir.mkdirs();
-
-        // 2. Generate unique filename
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = Paths.get(UPLOAD_DIR + fileName);
         
-        // 3. Save to local disk
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        return "/uploads/" + fileName;
+        // Upload to Cloudinary
+        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), 
+                ObjectUtils.asMap("resource_type", "auto"));
+        
+        // Return the permanent HTTPS URL
+        return uploadResult.get("secure_url").toString();
     }
 
     @Override
     @Transactional
     public ProductResponse saveWithImage(ProductRequest request, MultipartFile file) throws IOException {
-        String imageUrl = saveImage(file);
+        // Use Cloudinary instead of local disk
+        String imageUrl = uploadToCloudinary(file);
 
         ProductEntity entity = ProductEntity.builder()
                 .title(request.getTitle())
@@ -68,35 +66,34 @@ public class ProductServiceImpl implements ProductService {
 
         return mapToResponse(productRepository.save(entity));
     }
-    
+
     @Override
     @Transactional
     public ProductResponse update(Long id, ProductRequest request, MultipartFile file) throws IOException {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
-        // 1. Update text fields
         entity.setTitle(request.getTitle());
         entity.setDescription(request.getDescription());
         entity.setPrice(request.getPrice());
         entity.setProductId(request.getProductId());
 
-        // 2. Update image ONLY if a new one is provided
+        // Update image via Cloudinary ONLY if a new file is provided
         if (file != null && !file.isEmpty()) {
-            String newImageUrl = saveImage(file);
+            String newImageUrl = uploadToCloudinary(file);
             entity.setImageUrl(newImageUrl);
         }
 
         return mapToResponse(productRepository.save(entity));
     }
+
     @Override
     public List<ProductResponse> getAll() {
         return productRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
-    
+
     @Override
     public List<ProductResponse> getByCategoryId(Integer categoryId) {
-        // We use the repository to find entities, then map them to Response DTOs
         return productRepository.findByProductId(categoryId)
                 .stream()
                 .map(this::mapToResponse)
