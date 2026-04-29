@@ -55,6 +55,18 @@ public class SecurityConfig {
                 .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll() 
                 .requestMatchers(HttpMethod.POST, "/api/v1/reviews/add").permitAll() 
+                
+                .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                .requestMatchers("/api/v1/materials/**", "/api/materials/**").permitAll()
+                
+                // 4. ORDERS (Fixes 403 on /api/v1/orders/getall)
+                // We permit all here so the dashboard can fetch the list. 
+                .requestMatchers("/api/v1/orders/**").permitAll()
+                .requestMatchers("/api/orders/**").permitAll()
+
+                // 5. INVENTORY (Fixes 403 on /api/v1/inventory)
+                .requestMatchers("/api/v1/inventory/**").permitAll()
+                .requestMatchers("/api/inventory/**").permitAll()
 
                 // 5. ADMIN ONLY: Management & Inventory
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
