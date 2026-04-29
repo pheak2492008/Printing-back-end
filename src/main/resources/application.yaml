@@ -1,7 +1,7 @@
 spring:
   application:
     name: Printing
-
+  
   servlet:
     multipart:
       max-file-size: 10MB
@@ -15,44 +15,14 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
-    show-sql: ${SPRING_JPA_SHOW_SQL:false}
-    properties:
-      hibernate:
-        format_sql: true
+      ddl-auto: update
+    show-sql: false
 
-  # ====================== Static Resources (Important for images) ======================
-  web:
-    resources:
-      static-locations: classpath:/static/,file:./uploads/
+# Add this section to fix the "BeanCreationException"
+cloudinary:
+  cloud-name: ${CLOUDINARY_NAME:default}
+  api-key: ${CLOUDINARY_KEY:default}
+  api-secret: ${CLOUDINARY_SECRET:default}
 
 server:
   port: ${PORT:8081}
-  shutdown: graceful
-
-# ====================== Cloudinary Configuration ======================
-cloudinary:
-  cloud-name: ${CLOUDINARY_CLOUD_NAME:ducs4tcuq}
-  api-key: ${CLOUDINARY_API_KEY:843776387237543}
-  api-secret: ${CLOUDINARY_API_SECRET:6j2nvD3d4uLfZh6_OF2iWvOlqXM}
-
-# ====================== Logging ======================
-logging:
-  level:
-    com.printing_shop: INFO
-    org.springframework.web: INFO
-
-# ====================== Environment Variables (for local development) ======================
-SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/printing_db
-SPRING_DATASOURCE_USERNAME: postgres
-SPRING_DATASOURCE_PASSWORD: 123123
-SPRING_JPA_HIBERNATE_DDL_AUTO: update
-SPRING_JPA_SHOW_SQL: true
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME: ducs4tcuq
-CLOUDINARY_API_KEY: 843776387237543
-CLOUDINARY_API_SECRET: 6j2nvD3d4uLfZh6_OF2iWvOlqXM
-
-# Server Port
-PORT: 8081

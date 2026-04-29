@@ -36,35 +36,31 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authorizeHttpRequests(auth -> auth
-                // 1. PUBLIC: Auth & Swagger (Versioned to match Frontend)
                 .requestMatchers("/api/v1/auth/**", "/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-
-                // 2. PUBLIC: Static Files (The Image Fix)
                 .requestMatchers("/uploads/**").permitAll()
+                
+                // Orders
+                .requestMatchers("/api/v1/orders/getall", "/api/v1/orders/create", "/api/v1/orders/calculate").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*/status").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/*").permitAll()
 
-                // 3. PUBLIC: Product Viewing
+                // Inventory & Materials (Path mapping fix)
+                .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
+                .requestMatchers("/api/v1/inventory/**").permitAll() 
+                
+                // Products & Product Details (Unlock POST for Admin)
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/products/create").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/product-details/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/product-details/**").permitAll()
+                
+                .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/reviews/add").permitAll()
 
-                // 4. PUBLIC: Ordering & Materials
-                .requestMatchers("/api/v1/orders/calculate", "/api/v1/orders/create").permitAll()
-                .requestMatchers("/api/v1/orders/history/**", "/api/v1/orders/{id}").permitAll()
-                .requestMatchers("/api/v1/order-items/**").permitAll()
-                .requestMatchers("/api/v1/materials/**", "/api/materials/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll() 
-                .requestMatchers(HttpMethod.POST, "/api/v1/reviews/add").permitAll() 
-
-                // 5. ADMIN ONLY: Management
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
-                .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/product-details/**").hasAuthority("ADMIN")
-                .requestMatchers("/api/v1/admin/**", "/api/admin/**").hasAuthority("ADMIN")
-                .requestMatchers("/api/v1/inventory/**").hasAuthority("ADMIN")
-                .requestMatchers("/api/v1/orders/getall").hasAuthority("ADMIN")
-
-                // 6. CATCH-ALL
+                .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
+                
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -78,10 +74,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000", 
-                "http://localhost:5173", 
-                "http://localhost:5174",
-                "https://printing-shop-frontend.onrender.com" // Ensure this matches your actual Render URL
+                "http://localhost:3000", "http://localhost:5173", "http://localhost:5174",
+                "https://printing-shop-frontend.onrender.com"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
@@ -96,15 +90,8 @@ public class SecurityConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
             .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
-            .components(new Components()
-                .addSecuritySchemes("BearerAuth",
-                    new SecurityScheme()
-                        .name("BearerAuth")
-                        .type(SecurityScheme.Type.HTTP)
-                        .scheme("bearer")
-                        .bearerFormat("JWT")
-                )
-            );
+            .components(new Components().addSecuritySchemes("BearerAuth",
+                new SecurityScheme().name("BearerAuth").type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")));
     }
 
     @Bean
