@@ -20,6 +20,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -36,31 +37,35 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/api/auth/**").permitAll()
+                // 1. PUBLIC: Auth & Swagger
+                .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+
+                // 2. PUBLIC: Static Files (Product Images)
                 .requestMatchers("/uploads/**").permitAll()
-                
-                // Orders
-                .requestMatchers("/api/v1/orders/getall", "/api/v1/orders/create", "/api/v1/orders/calculate").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*/status").permitAll()
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/*").permitAll()
 
-                // Inventory & Materials (Path mapping fix)
-                .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
-                .requestMatchers("/api/v1/inventory/**").permitAll() 
-                
-                // Products & Product Details (Unlock POST for Admin)
+                // 3. PUBLIC: Product Viewing
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/products/create").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/product-details/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/product-details/**").permitAll()
-                
-                .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/reviews/add").permitAll()
 
-                .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
-                
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // 4. PUBLIC: Ordering & Reviews
+                .requestMatchers("/api/orders/calculate", "/api/orders/create").permitAll()
+                .requestMatchers("/api/orders/history/**", "/api/orders/{id}").permitAll()
+                .requestMatchers("/api/order-items/**").permitAll()
+                .requestMatchers("/api/materials/**", "/api/v1/materials/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll() 
+                .requestMatchers(HttpMethod.POST, "/api/v1/reviews/add").permitAll() 
+
+                // 5. ADMIN ONLY: Management & Inventory
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
+                .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/product-details/**").hasAuthority("ADMIN")
+                .requestMatchers("/api/v1/admin/**", "/api/admin/**").hasAuthority("ADMIN")
+                .requestMatchers("/api/inventory/**", "/api/v1/inventory/**").hasAuthority("ADMIN")
+                .requestMatchers("/api/orders/getall").hasAuthority("ADMIN")
+
+                // 6. CATCH-ALL
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -75,7 +80,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000", "http://localhost:5173", "http://localhost:5174",
-                "https://printing-shop-frontend.onrender.com"
+                "https://your-frontend-link.onrender.com" // UPDATE THIS
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
@@ -90,16 +95,22 @@ public class SecurityConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
             .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
-            .components(new Components().addSecuritySchemes("BearerAuth",
-                new SecurityScheme().name("BearerAuth").type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")));
+            .components(new Components()
+                .addSecuritySchemes("BearerAuth",
+                    new SecurityScheme()
+                        .name("BearerAuth")
+                        .type(SecurityScheme.Type.HTTP)
+                        .scheme("bearer")
+                        .bearerFormat("JWT")
+                )
+            );
     }
 
     @Bean
     public CommandLineRunner printSwaggerLink() {
         return args -> {
             System.out.println("\n🚀 Printing Shop API Started Successfully!");
-            System.out.println("👉 API BASE: http://localhost:8081/api/v1");
-            System.out.println("👉 SWAGGER UI: http://localhost:8081/swagger-ui/index.html\n");
+            System.out.println("👉 SWAGGER UI: http://localhost:8082/swagger-ui/index.html\n");
         };
     }
 }

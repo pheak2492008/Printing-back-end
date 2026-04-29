@@ -30,7 +30,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL:-false}
       # This tells Spring Boot which port to run on inside the container
-      SERVER_PORT: ${PORT:-8081}
+      SERVER_PORT: ${PORT:-8082}
     ports:
       # "HostPort:ContainerPort"
       - "${PORT:-8081}:${PORT:-8081}"

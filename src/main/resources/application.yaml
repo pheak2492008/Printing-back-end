@@ -25,4 +25,4 @@ cloudinary:
   api-secret: ${CLOUDINARY_SECRET:default}
 
 server:
-  port: ${PORT:8081}
+  port: ${PORT:8082}
