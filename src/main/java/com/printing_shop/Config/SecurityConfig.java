@@ -59,6 +59,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                 .requestMatchers("/api/v1/materials/**", "/api/materials/**").permitAll()
                 
+                .requestMatchers(HttpMethod.OPTIONS, "/api/v1/admin/profile/**").permitAll() 
+                
+                // Explicitly handle GET and PUT for the profile
+                .requestMatchers(HttpMethod.GET, "/api/v1/admin/profile/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/admin/profile/**").hasAuthority("ADMIN")
+                
                 // 4. ORDERS (Fixes 403 on /api/v1/orders/getall)
                 // We permit all here so the dashboard can fetch the list. 
                 .requestMatchers("/api/v1/orders/**").permitAll()
