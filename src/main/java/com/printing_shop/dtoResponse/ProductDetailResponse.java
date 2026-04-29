@@ -1,19 +1,22 @@
 package com.printing_shop.dtoResponse;
 
-import jakarta.persistence.Column;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class ProductDetailResponse {
+
     private Long id;
+    private String title;
     private String name;
     private Double price;
+    private String description;
+    private Integer productId;
     private Integer stock;
     private String imageUrl;
-    
-    @Column(length = 1000) // Increase to 1000 characters
-    private String description;
 }

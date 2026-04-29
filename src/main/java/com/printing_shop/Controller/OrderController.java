@@ -15,9 +15,9 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/v1/orders") // Added /v1 to match SecurityConfig permitAll
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5174")
+@CrossOrigin(origins = "*") // Allows all origins to prevent CORS errors during testing
 public class OrderController {
     
     private final OrderService orderService;
@@ -38,11 +38,10 @@ public class OrderController {
             @RequestParam("dpiQuality") String dpiQuality,
             @RequestParam("hasGrommets") Boolean hasGrommets,
             @RequestParam("hasHems") Boolean hasHems,
-            @RequestParam(value = "description", required = false) String description, // ✅ This must be here
+            @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "file", required = false) MultipartFile file
     ) throws IOException {
 
-        // ✅ Update this constructor call to include all 10 fields!
         OrderRequest request = new OrderRequest(
             fullName, 
             phoneNumber, 
@@ -53,12 +52,13 @@ public class OrderController {
             dpiQuality, 
             hasGrommets, 
             hasHems, 
-            description // 👈 Don't forget this one!
+            description 
         );
 
         Order savedOrder = orderService.createOrder(request, file);
         return ResponseEntity.ok(orderService.getOrderReceipt(savedOrder.getOrderId()));
     }
+
     @GetMapping("/getall")
     public ResponseEntity<List<OrderResponse>> getAll() {
         return ResponseEntity.ok(orderService.getAllOrders());
